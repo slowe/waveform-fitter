@@ -214,9 +214,8 @@
 		//     this.scales.svgWidth=this.scales.winFullWidth;
 		//     this.scales.svgHeight=this.scales.svgWidth*0.5;
 		// }
-		
-		this.scales.svgWidth=Math.floor(parseFloat(d3.select('body').style('width')));
-		this.scales.svgHeight=Math.floor(this.scales.svgWidth/2);
+		this.scales.svgWidth=Math.floor(document.getElementById(this.holders.graph).offsetWidth);
+		this.scales.svgHeight=document.getElementById(this.holders.graph).offsetHeight||Math.floor(this.scales.svgWidth/2);
 		// d3.select('#about').append('p').html(window.outerWidth+' x '+window.outerHeight+'=> '+this.scales.svgWidth+' x '+this.scales.svgHeight);
 		this.scales.svgMargin={'left':80,'right':10,'top':10,'bottom':80}
 		this.scales.graphWidth=this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
@@ -247,15 +246,17 @@
 		// d3.select('#about').style('width',this.scales.svgWidth);
 		d3.select('#about-button').on('click',function(){showAbout();});
 		d3.select('#about-close').on('click',function(){hideAbout();});
-		d3.select('#lang-button').on('click',function(){showLang();});
+		//d3.select('#lang-button').on('click',function(){showLang();});
 		d3.select('#lang-close').on('click',function(){hideLang();});
-		var langR=parseFloat(d3.select('body').style('width')) - (document.getElementById('lang-button').offsetLeft + document.getElementById('lang-button').offsetWidth);
-		document.getElementById('lang').style.right=langR;
-		d3.selectAll('.lang-item').on('click',function(d,i){
+		//var langR=parseFloat(d3.select('body').style('width')) - (document.getElementById('lang-button').offsetLeft + document.getElementById('lang-button').offsetWidth);
+		//document.getElementById('lang').style.right=langR;
+		/*d3.selectAll('.lang-item').on('click',function(d,i){
 			_wf.lang.setLanguage(this.getAttribute('data-lang'));
 			//window.location.replace(_wf.makeUrl({'lang':_wf.lang.lang}));
 			hideLang();
-		})
+		})*/
+		
+		document.getElementById(this.holders.graph).style.height = '';
 		
 		var hid=d3.select('#'+this.holders.graph);
 		hid.selectAll('*').remove();

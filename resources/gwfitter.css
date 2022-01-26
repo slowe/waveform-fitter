@@ -1,168 +1,146 @@
+/*! minireset.css v0.0.6 | MIT License | github.com/jgthms/minireset.css */html,body,p,ol,ul,li,dl,dt,dd,blockquote,figure,fieldset,legend,textarea,pre,iframe,hr,h1,h2,h3,h4,h5,h6{margin:0;padding:0}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}ul{list-style:none}button,input,select{margin:0}html{box-sizing:border-box}*,*::before,*::after{box-sizing:inherit}img,video{height:auto;max-width:100%}iframe{border:0}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}
+
 body{
-    background-color: black;
-    color:white;
-    font: 11px sans-serif;
-    overflow:hidden;
-    margin-left:auto;
-    margin-right:auto;
-    position:relative;
-    width:80%
+	background-color: black;
+	color:white;
+	font: 16px sans-serif;
+	overflow:hidden;
+	margin: 0;
+	padding: 0;
+	margin: auto;
+	position:relative;
+	width:100%
 }
 @media @media only screen and (max-width: 600px){
-    body{
-        width:100%;
-    }
+	body{
+		width:100%;
+	}
 }
-a{
-    color:yellow;
+
+.page {
+	display: grid;
+	grid-template-rows: 5em 7em calc(100vh - 12em);
 }
-#title{
-    /* display:inline-block; */
-    /* width:auto; */
-    padding-bottom:20px;
-    text-align: center;
+h1 { font-size: 1.6em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
+h2 { font-size: 1.3em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
+a { color:yellow; }
+#title{ text-align: center; position: relative; }
+menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-columns: auto auto; grid-gap: 0.5em; margin: 1em; padding-left: 0; }
+.language-picker, .popup-button, .popup-close {
+	cursor:pointer;
+	line-height: 2em;
 }
-#param-holder{
-    width:100%;
-    position:relative;
-    display:inline-block;
-    padding:0 0 40px 40px ;
-}
-.popup-button, .popup-close{
-    /* position:absolute; */
-    right:0;
-    border:1px solid white;
-    padding:5px;
-    cursor:pointer;
-    float:right;
-}
-.popup-button{
-    font-size:2em;
-    margin-right:50px;
-    margin-top:10px;
-}
+.popup-button span { display: block; padding: 0.25em 0.5em; }
+.language-picker:hover, .popup-button:hover, .popup-close:hover, .language-picker:focus, .popup-button:focus, .popup-close:focus { background: #333; outline: 2px solid #c89600; }
+.language-picker__form { display: block; grid-template-columns: auto auto; grid-gap: 0.25em; position: relative; height: 100%; }
+.language-picker select { display: inline-block; height: 100%; font: inherit; color: white; background: transparent; border: 0; cursor:inherit; }
+.language-picker label svg { position: absolute; left: 0.5em; top: 50%; transform: translate3d(0,-50%,0); height: 1.5em; width: 1.5em; }
+.language-picker select { padding-left: 2.25em; }
+.language-picker select:focus { outline: 2px solid #c89600; }
+.language-picker select option { color: black; }
 .popup-close{
-    margin-right:10px;
-    margin-top:10px;
-    font-size:1.33em;
+	margin-right:10px;
+	margin-top:10px;
+	font-size:1.33em;
 }
 .popup{
-    position:absolute;
-    width:auto;
-    /* max-height:0; */
-    overflow: hidden;
-    background-color: #333;
-    /* opacity:75%; */
-    z-index:100;
-    font-size:1.5em;
-    line-height:1.5em;
-    padding:0 0 0 50px;
-    overflow:auto;
+	position:absolute;
+	width:auto;
+	/* max-height:0; */
+	overflow: hidden;
+	background-color: #333;
+	/* opacity:75%; */
+	z-index:100;
+	font-size:1.5em;
+	line-height:1.5em;
+	padding:0 0 0 50px;
+	overflow:auto;
 }
-#about{
-    height:0;
-}
+#about{ height:0; }
 #lang{
-    right:0;
-    max-height:0;
-    overflow:hidden;
-    padding:0 10px;
+	right:0;
+	max-height:0;
+	overflow:hidden;
+	padding:0 10px;
 }
 #lang p{
-    cursor:pointer
+	cursor:pointer
 }
 #about p, #about ul{
-    margin-right:50px;
+	margin-right:50px;
 }
+#fitter-holder { padding: 1em; }
 #graph-holder{
-    display:inline-block;
-    width:100%;
+	display: block;
+	width:100%;
+	height: 100%;
 }
-.param-outer{
-    width:auto;
-    display:inline-block;
-    padding-right:40px;
+#param-holder {
+	width:100%;
+	position:relative;
+	display:grid;
+	grid-template-columns: repeat(2,1fr);
+	grid-gap: 2em;
+	padding: 0 1em;
 }
-.param-title{
-    width:auto;
-    display:inline-block;
-    padding-right:30px;
-    /* vertical-align: top; */
-    text-align:center;
+.param-outer {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-gap: 1em;
+}
+.param-title {
+	text-align:center;
 }
 .param-title h2{
-    margin:0;
-    line-height:1.5em;
+	margin:0;
+	line-height:1.5em;
 }
-.param-slider-outer{
-    width:200px;
-    display:inline-block;
-    margin-top:3em;
+.param-slider-outer {
+	margin:3em 2em 3em 2em;
 }
 .param-slider{
-    background-color:rgba(200,150,0,1);
+	background-color:rgba(200,150,0,1);
 }
 .noUi-base, .noUi-handle, .noUi-value{
 cursor:pointer;
 }
 .noUi-pips-horizontal{
-    padding-top:5px;
+	padding-top:5px;
 }
 .noUi-horizontal .noUi-tooltip{
-    font-size:1.5em;
-    background:none;
-    color:white;
-    border:none;
+	font-size:1.5em;
+	background:none;
+	color:white;
+	border:none;
 }
 .noUi-horizontal .noUi-tooltip::after{
-    content:'';
-    position: absolute;
-    left: 50%;
-    margin-left:-10px;
-    bottom: -3px;
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 10px solid white;
-    clear: both;
+	content:'';
+	position: absolute;
+	left: 50%;
+	margin-left:-10px;
+	bottom: -3px;
+	width: 0;
+	height: 0;
+	border-left: 10px solid transparent;
+	border-right: 10px solid transparent;
+	border-top: 10px solid white;
+	clear: both;
 }
 .noUi-value-large{
-    font-size:1.5em;
-    color:white;
+	font-size:1.5em;
+	color:white;
 }
 .noUi-marker-horizontal.noUi-marker-large{
-    height:8px;
-    background-color:white;
+	height:8px;
+	background-color:white;
 }
-.axis text{
-    fill:white;
-    font-size:2em;
-}
-.axis path{
-    stroke:white;
-}
-.axis .tick line{
-    stroke:white;
-    opacity:0.2;
-}
-.line{
-    stroke-width:2;
-}
-.line.data{
-    stroke:rgba(0,150,200,1)
-}
-.line.sim{
-    stroke:rgba(200,150,0,1)
-}
-.leg-text{
-    dominant-baseline:middle;
-    font-size:20px;
-}
-.leg-text.data{
-    fill:rgba(0,150,200,1);
-}
-.leg-text.sim{
-    fill:rgba(200,150,0,1);
-}
+.axis text { fill:white; font-size:2em; }
+.axis path { stroke:white; }
+.axis .tick line { stroke:white; opacity:0.2; }
+.line { stroke-width:2; }
+.line.data { stroke:rgba(0,150,200,1); }
+.line.sim { stroke:rgba(200,150,0,1); }
+.leg-text { dominant-baseline:middle; font-size:20px; }
+.leg-text.data { fill:rgba(0,150,200,1); }
+.leg-text.sim { fill:rgba(200,150,0,1); }
 

@@ -30,11 +30,22 @@
 				if(!_obj.languages[_obj.lang] && _obj.lang.indexOf("-") > 0) _obj.lang = _obj.lang.replace(/\-.*/g,"");
 				// If the language code still doesn't exist set it to Welsh (default)
 				if(!_obj.languages[_obj.lang]) _obj.lang = "cy";
+				_obj.updatePicker();
 				_obj.getLanguageData();
 			}).catch(error => {
 				console.error('There has been a problem with your fetch operation:', error);
 			});
 			return _obj;
+		};
+		this.updatePicker = function(){
+			if(opt.picker){
+				var sel = "";
+				for(var lang in _obj.languages) sel += '<option lang="'+lang+'" value="'+lang+'"'+(lang==_obj.lang ? ' selected' : '')+'>'+_obj.languages[lang].label+'</option>';
+				el = document.getElementById(opt.picker);
+				if(el) el.innerHTML = sel;
+				el.focus();
+				el.addEventListener('change',function(e){ _obj.setLanguage(e.currentTarget.value); });
+			}
 		};
 		this.getLanguageData = function(){
 			console.info('Lang.getLanguageData');
@@ -72,10 +83,12 @@
 			document.open();
 			document.write('<!DOCTYPE html>'+html);
 			document.close();
-			if(opt && typeof opt.ready==="function") ready(function(){ opt.ready.call(_obj); });
+			
+			if(opt && typeof opt.ready==="function") ready(function(){ _obj.updatePicker(); opt.ready.call(_obj); });
 			
 			return this;
 		};
+
 		init();
 		return this;
 	}
