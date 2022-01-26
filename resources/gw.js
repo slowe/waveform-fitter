@@ -428,7 +428,6 @@
 
 		
 		var distdiv = document.querySelector('#'+this.holders.dist+' .param-slider-outer');
-		console.log(distdiv,this.holders.dist);
 		if(distdiv){
 			dist_slider = document.createElement('div');
 			dist_slider.classList.add('param-slider');

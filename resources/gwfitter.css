@@ -19,7 +19,7 @@ body{
 
 .page {
 	display: grid;
-	grid-template-rows: 5em 8em calc(100vh - 13em);
+	grid-template-rows: 5em 7.5em calc(100vh - 12.5em);
 }
 h1 { font-size: 1.6em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
 h2 { font-size: 1.2em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
@@ -47,10 +47,8 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 .popup{
 	position:absolute;
 	width:auto;
-	/* max-height:0; */
 	overflow: hidden;
 	background-color: #333;
-	/* opacity:75%; */
 	z-index:100;
 	font-size:1.5em;
 	line-height:1.5em;
@@ -70,7 +68,7 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 #about p, #about ul{
 	margin-right:50px;
 }
-#fitter-holder { padding: 1em; }
+#fitter-holder { padding: 0em 2em; }
 #graph-holder{
 	display: block;
 	width:100%;
@@ -82,7 +80,7 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 	display:grid;
 	grid-template-columns: repeat(2,1fr);
 	grid-gap: 2em;
-	padding: 0 2em;
+	padding: 0 1em 0 6em;
 }
 .param-outer h2 { line-height: 1.5em; height: 1.5em; }
 .param-title {
@@ -93,35 +91,41 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 	line-height:1.5em;
 }
 .param-slider-outer {
-	margin:2.5em 2em 2.5em 0em;
+	margin:1em 2em 2.5em 0em;
 }
 .param-slider{
 	background-color:rgba(200,150,0,1);
 }
+.noUi-target { border: 0; box-shadow: none; }
 .noUi-base, .noUi-handle, .noUi-value{ cursor:pointer; }
 .noUi-pips-horizontal{ padding-top: 0.25em; }
 .noUi-horizontal { height: 1em; }
-.noUi-horizontal .noUi-tooltip{
-	font-size:1.25em;
+.noUi-horizontal .noUi-tooltip {
+	font-size:1.2em;
 	background:none;
 	color:white;
 	border:none;
+	background: #c89600;
+	color: black;
+	line-height: 1em;
+	top: calc(100% + 0.4em);
+	bottom: unset;
 }
-.noUi-horizontal .noUi-tooltip::after{
+.noUi-horizontal .noUi-tooltip::after {
 	content:'';
 	position: absolute;
 	left: 50%;
-	margin-left:-10px;
-	bottom: -3px;
+	margin-left:-0.4em;
+	top: -0.25em;
 	width: 0;
 	height: 0;
-	border-left: 10px solid transparent;
-	border-right: 10px solid transparent;
-	border-top: 10px solid white;
+	border-left: 0.4em solid transparent;
+	border-right:0.4em solid transparent;
+	border-bottom: 0.4em solid #c89600;
 	clear: both;
 }
 .noUi-value-large{
-	font-size:1.25em;
+	font-size:1em;
 	color:white;
 }
 .noUi-marker-horizontal.noUi-marker-large {
