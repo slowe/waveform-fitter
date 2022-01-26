@@ -49,7 +49,6 @@
 				}
 			}else{
 				var idx=this.tint(t);
-				// console.log('getH',t,idx);
 				var h0;
 				if (idx<0){
 					h0=NaN;
@@ -58,7 +57,6 @@
 				}else{
 					let i0=Math.floor(idx), i1=Math.ceil(idx),di=idx%1;
 					var h0=(1-di)*this.h[i0] + di*this.h[i1];
-					// console.log(i0,i1,di,h0);
 				};
 			}
 			return h0;
@@ -82,24 +80,16 @@
 			this.scale(mass,dist);
 		}
 		scale(m,d,tout){
-			// var tScale=(tout-this.t0)*this.M0/m + this.t0;
-			// console.log('scaling from',this.M0,'to',m,'and from',this.D0,'to',d)
 			this.mass=m;
 			this.dist=d;
 			if (!tout){
 				tout=this.t;
 			}
 			var dout=[];
-			for (var i=0;i<tout.length;i++){
+			for(var i=0;i<tout.length;i++){
 				let tScale=(tout[i]-this.t0)*this.M0/m + this.t0;
 				let hout=this.getH(tScale)*(m/this.M0)*(this.D0/d);
-				if (i%100==0){
-					// console.log(tout[i],this.t0,tout[i]-this.t0,m,this.M0,tScale,hout);
-				}
 				if (!Number.isNaN(hout)){dout.push([tout[i],hout]);}
-				
-				
-				// console.log([tout[i],this.getH(tScale)]);
 			}
 			return(new WaveData(dout));
 		}
@@ -123,15 +113,23 @@
 			this.lang = opts.lang;
 			this.langdict = opts.lang.translations;
 
-			if(_wf.debug) console.log('loaded');
 			this.addSliders();
-			this.setLang();
 			this.initGraph();
+
+			// Re-attach the window event
+			window.addEventListener('resize', this.resize );
+
+			return this;
 		};
-		window.addEventListener("resize",function(){ _wf.initGraph(); });
 
 		this.initData();
 
+
+		return this;
+	}
+	
+	WaveFitter.prototype.resize = function(){
+		console.info('resize');
 		return this;
 	}
 
@@ -169,15 +167,6 @@
 		newUrl = newUrl.slice(0,newUrl.length-1);
 		return newUrl;
 	}
-	WaveFitter.prototype.setLang = function(){
-		var _wf=this;
-		d3.selectAll('.translate').each(function(){
-			let tlCode = this.getAttribute('data-content');
-			let tlTxt = _wf.getTl(tlCode);
-			this.innerHTML=tlTxt;
-		});
-		return this;
-	}
 	WaveFitter.prototype.getTl = function(code){
 		var _wf = this;
 		var lang = _wf.lang.lang;
@@ -189,8 +178,6 @@
 	}
 	WaveFitter.prototype.initData = function(){
 		this.data={dataH:new WaveData(dataH),simNR:new ScaleableWaveData(simNR)};
-		// this.data.dataH.shiftt(-0.423);
-		// this.data.dataSim=new ScaleableWaveData({'t':this.data.dataH.t,'h':this.data.simNR.getH(this.data.dataH.t)})
 		this.ranges={mass:[20,100],dist:[100,800]}
 		this.mass=this.ranges.mass[0] + Math.random()*(this.ranges.mass[1]-this.ranges.mass[0]);
 		this.dist=this.ranges.dist[0] + Math.random()*(this.ranges.dist[1]-this.ranges.dist[0]);
@@ -202,23 +189,8 @@
 
 	WaveFitter.prototype.setScales = function(){
 		this.scales={}
-		// if (window.outerWidth)
-		// this.scales.winFullWidth=window.outerWidth-50;
-		// this.scales.winFullHeight=window.outerHeight-document.getElementById('title').clientHeight-
-		// document.getElementById(this.holders.param).clientHeight-100;
-		// this.scales.winAspect = this.scales.winFullWidth/this.scales.winFullHeight;
-		// 
-		// if (this.scales.winAspect>2){
-		//     this.scales.svgHeight=this.scales.winFullHeight;
-		//     this.scales.svgWidth=this.scales.svgHeight*2;
-		// 
-		// }else{
-		//     this.scales.svgWidth=this.scales.winFullWidth;
-		//     this.scales.svgHeight=this.scales.svgWidth*0.5;
-		// }
 		this.scales.svgWidth=Math.floor(document.getElementById(this.holders.graph).offsetWidth);
 		this.scales.svgHeight=document.getElementById(this.holders.graph).offsetHeight||Math.floor(this.scales.svgWidth/2);
-		// d3.select('#about').append('p').html(window.outerWidth+' x '+window.outerHeight+'=> '+this.scales.svgWidth+' x '+this.scales.svgHeight);
 		this.scales.svgMargin={'left':80,'right':10,'top':10,'bottom':80}
 		this.scales.graphWidth=this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
 		this.scales.graphHeight=this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
@@ -228,44 +200,35 @@
 		this.scales.xScale.domain(this.data.trange)
 		this.scales.xAxis = d3.axisBottom(this.scales.xScale)
 			.tickSize(-this.scales.graphHeight)
-		// this.scales.xAxis = d3.svg.axis()
-		//     .scale(this.scales.xScale)
-		//     .orient("bottom")
-		//     .innerTickSize(-this.scales.graphHeight);
 		this.scales.yScale = d3.scaleLinear().range([this.scales.graphHeight,0]);
 		this.scales.yScale.domain(this.data.hrange);
 		this.scales.yAxis = d3.axisLeft(this.scales.yScale)
 			.tickSize(-this.scales.graphWidth)
-		// this.scales.yAxis = d3.svg.axis()
-		//             .scale(this.scales.yScale)
-		//             .orient("left")
-		//             .innerTickSize(-this.scales.graphWidth);
 	}
 	WaveFitter.prototype.initGraph = function(){
 		var _wf=this;
 		_wf.setScales();
-		// d3.select('body').style('width',this.scales.svgWidth);
-		// d3.select('#about').style('width',this.scales.svgWidth);
-		d3.select('#about-button').on('click',function(){showAbout();});
-		d3.select('#about-close').on('click',function(){hideAbout();});
-		//d3.select('#lang-button').on('click',function(){showLang();});
-		d3.select('#lang-close').on('click',function(){hideLang();});
-		//var langR=parseFloat(d3.select('body').style('width')) - (document.getElementById('lang-button').offsetLeft + document.getElementById('lang-button').offsetWidth);
-		//document.getElementById('lang').style.right=langR;
-		/*d3.selectAll('.lang-item').on('click',function(d,i){
-			_wf.lang.setLanguage(this.getAttribute('data-lang'));
-			//window.location.replace(_wf.makeUrl({'lang':_wf.lang.lang}));
-			hideLang();
-		})*/
-		
+
+		document.getElementById('about-button').addEventListener('click',function(){ showAbout(); });
+		document.getElementById('about-close').addEventListener('click',function(){ hideAbout(); });
 		document.getElementById(this.holders.graph).style.height = '';
-		
+
+		/* NEW
+		var hid = document.getElementById(this.holders.graph);
+		hid.innerHTML = "";
+		_wf.svg = document.createElement('svg');
+		_wf.svg.classList.add('graph');
+		_wf.svg.style.width = (_wf.scales.svgWidth)+'px';
+		_wf.svg.style.height = (_wf.scales.svgHeight)+'px';
+		hid.appendChild(_wf.svg);
+		*/
 		var hid=d3.select('#'+this.holders.graph);
 		hid.selectAll('*').remove();
 		_wf.svg=hid.append('svg')
 			.attr("class","graph")
 			.attr("width", (_wf.scales.svgWidth)+'px')
 			.attr("height", (_wf.scales.svgHeight)+'px');
+			
 		var clip = _wf.svg.append("defs").append("svg:clipPath")
 			.attr("id", "clip")
 			.append("svg:rect")
@@ -275,8 +238,6 @@
 			.attr("y", 0);
 		
 		// make x-axis
-		// console.log(_wf.scales.svgMargin.left+"," +
-			// (_wf.scales.graphHeight + _wf.scales.svgMargin.top))
 		_wf.svg.append("g")
 			.attr("class", "x-axis axis")
 			.attr("id","x-axis-g")
@@ -333,8 +294,7 @@
 			.attr('d',_wf.lineFn)
 			.attr('stroke-width',2)
 			.attr('fill','none')
-		
-		// console.log('draw data',this.mass,this.dist);
+
 		_wf.data.plotSim=_wf.data.simNR.scale(_wf.mass,_wf.dist,_wf.data.dataH.t);    
 		d3.select('#data-g').append('path')
 			.data([_wf.data.plotSim.lineData])
@@ -389,13 +349,9 @@
 	}
 	WaveFitter.prototype.addSliders = function(){
 		var _wf=this;
-		// d3.select('#'+this.holders.param).append('div')
-		//     .attr('class','param-outer')
-		//     .attr('id','param-title')
-		// .append('h2')
-		//     .html('Simulation parameters')
+
 		var massdiv = document.querySelector('#'+this.holders.mass+' .param-slider-outer');
-		if(massdiv){
+		if(!massdiv.querySelector('.param-slider')){
 			mass_slider = document.createElement('div');
 			mass_slider.classList.add('param-slider');
 			mass_slider.setAttribute('id','mass-slider');
@@ -416,19 +372,17 @@
 			} );
 			mass_slider.noUiSlider.on('update',function(values,handle){
 				var value = values[handle];
-				// d3.select('#mass-title').select('span.value').html(value);
 				_wf.mass=value;
 				_wf.updatePlot(0);
 			});
 			mass_slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				console.log(e);
 				mass_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
 			});
 		}
 
 		
 		var distdiv = document.querySelector('#'+this.holders.dist+' .param-slider-outer');
-		if(distdiv){
+		if(!distdiv.querySelector('.param-slider')){
 			dist_slider = document.createElement('div');
 			dist_slider.classList.add('param-slider');
 			dist_slider.setAttribute('id','dist-slider');
@@ -448,51 +402,24 @@
 			});
 			dist_slider.noUiSlider.on('update',function(values,handle){
 				var value = values[handle];
-				// d3.select('#dist-title').select('span.value').html(value);
 				_wf.dist=value;
 				_wf.updatePlot(100);
 			})
 			dist_slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				console.log(e);
 				dist_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
 			});
-
 		}
-
+		return this;
 	}
 
 
 	function showAbout(){
-		console.log('showing About');
-		d3.select('#about')
-			.classed('on',true)
-			.transition()
-			.duration(500)
-			.style('height','75%')
+		var el = document.getElementById('about');
+		el.classList.add('on');
 	}
 	function hideAbout(){
-		console.log('hiding About');
-		d3.select('#about')
-			.classed('on',false)
-			.transition()
-			.duration(500)
-			.style('height',0)
-	}
-	function showLang(){
-		console.log('showing Lang');
-		d3.select('#lang')
-			.classed('on',true)
-			.transition()
-			.duration(500)
-			.style('max-height','25%')
-	}
-	function hideLang(){
-		console.log('hiding Lang');
-		d3.select('#lang')
-			.classed('on',false)
-			.transition()
-			.duration(500)
-			.style('max-height',0)
+		var el = document.getElementById('about');
+		el.classList.remove('on');
 	}
 
 	function clone(el){

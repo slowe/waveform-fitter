@@ -52,6 +52,8 @@
 	</div>
 
 	<div class="popup" id="about">
+		<div id="about-close" class="popup-close" title="{{site.data.translations[text.close][post.lang]}}">&times;</div>
+		<div class="padded">
 			<!--
 			<div class="popup" id="lang">
 				<div id="lang-close" class="popup-close">{{site.data.translations[text.close][post.lang]}}</div>
@@ -59,16 +61,16 @@
 				<p><span class="lang-item" id="lang-en" data-lang="en">English</span></p>
 				<p><span class="lang-item" id="lang-cy" data-lang="cy">Cymraeg</span></p>
 			</div>-->
-		<div id="about-close" class="popup-close">{{site.data.translations[text.close][post.lang]}}</div>
-		<h3>{{site.data.translations[text.about.heading][post.lang]}}</h3>
-		<p>{{site.data.translations[text.about.intro][post.lang]}}</p>
-		<p>{{site.data.translations[text.about.params][post.lang]}}</p>
-		<ul>
-			<li>{{site.data.translations[text.about.param.mass][post.lang]}}</li>
-			<li>{{site.data.translations[text.about.param.dist][post.lang]}}</li>
-		</ul>
-		<p>{{site.data.translations[text.about.data][post.lang]}}</p>
-		<p>{{site.data.translations[text.about.credit][post.lang]}}</p>
+			<h3>{{site.data.translations[text.about.heading][post.lang]}}</h3>
+			<p>{{site.data.translations[text.about.intro][post.lang]}}</p>
+			<p>{{site.data.translations[text.about.params][post.lang]}}</p>
+			<ul>
+				<li>{{site.data.translations[text.about.param.mass][post.lang]}}</li>
+				<li>{{site.data.translations[text.about.param.dist][post.lang]}}</li>
+			</ul>
+			<p>{{site.data.translations[text.about.data][post.lang]}}</p>
+			<p>{{site.data.translations[text.about.credit][post.lang]}}</p>
+		</div>
 	</div>
 
 	<script type="text/javascript">

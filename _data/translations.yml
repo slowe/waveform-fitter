@@ -17,8 +17,8 @@ text:
             cy: Mae’r ap gwe hwn yn eich galluogi i gyfateb efelychiad o ddata ton ddisgyrchol i ddata go iawn sy’n deillio o’r ddau dwll du yn uno.
 
         params:
-            en: Use the sliders to adjust the basic parameters of the simulation to match the data. The parameters are:
-            cy: Defnyddiwch y llithryddion i addasu paramedrau sylfaenol yr efelychiad i gyfateb y data. Y paramedrau yw’r canlynol:
+            en: Use the sliders to adjust the basic parameters of the simulation to match the data. The parameters are&#58;
+            cy: Defnyddiwch y llithryddion i addasu paramedrau sylfaenol yr efelychiad i gyfateb y data. Y paramedrau yw’r canlynol&#58;
 
         param:
             mass:
@@ -34,8 +34,8 @@ text:
             cy: Mae data ar gyfer GW150914 (o’r synhwyrydd LIGO-Hanford). Efelychiad yn rhagdybio màs cyfartal.
 
         credit:
-            en: Written and maintained by Chris North (Cardiff University) for the LIGO-Virgo Collaboration. Simulation credit: Mark Hannam (Cardiff University). <a href="https://github.com/cardiffgravity/waveform-fitter">Source code</a>
-            cy: Ysgrifennwyd a chynhaliwyd gan Chris North (Prifysgol Caerdydd) ar gyfer Cydweithrediad LIGO-Virgo. Cydnabyddiaeth yr efelychiad: Mark Hannam (Prifysgol Caerdydd). <a href="https://github.com/cardiffgravity/waveform-fitter">Côd gwreiddiol</a>
+            en: Written and maintained by Chris North (Cardiff University) for the LIGO-Virgo Collaboration. Simulation credit&#58; Mark Hannam (Cardiff University). <a href="https://github.com/cardiffgravity/waveform-fitter">Source code</a>
+            cy: Ysgrifennwyd a chynhaliwyd gan Chris North (Prifysgol Caerdydd) ar gyfer Cydweithrediad LIGO-Virgo. Cydnabyddiaeth yr efelychiad&#58; Mark Hannam (Prifysgol Caerdydd). <a href="https://github.com/cardiffgravity/waveform-fitter">Côd gwreiddiol</a>
 
         button:
             en: About

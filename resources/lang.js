@@ -70,15 +70,16 @@
 			html = html.replace(/\-\-\-/g,"").replace(/\{\{([^\}]*)\}\}/g,function(m,p1){
 				var txt = "";
 				txt = p1.replace(/\[([^\]]*)\]/,function(m,p1){
-					if(p1.indexOf('text')==0 || p1.indexOf('data')==0) return "."+p1;
-					return "";
+					if(p1.indexOf('text')==0 || p1.indexOf('data')==0) p1 = "."+p1;
+					return p1;
 				});
 				try{
-					return eval(txt);
+					txt = eval(txt);
 				}catch(err){
 					console.error('Value of '+txt+' does not evaluate.');
+					txt = "";
 				}
-				return "";
+				return txt;
 			})
 			document.open();
 			document.write('<!DOCTYPE html>'+html);

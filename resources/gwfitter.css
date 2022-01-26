@@ -19,14 +19,15 @@ body{
 
 .page {
 	display: grid;
-	grid-template-rows: 5em 7.5em calc(100vh - 12.5em);
+	grid-template-rows: 4.5em 7.5em calc(100vh - 12em);
 }
-h1 { font-size: 1.6em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
-h2 { font-size: 1.2em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
+h1 { font-size: 1.6em; font-weight: bold; line-height: 2.5em; }
+h2 { font-size: 1.3em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
+h3 { font-size: 1.2em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
 sub { position: relative; }
 a { color:yellow; }
 #title{ text-align: center; position: relative; }
-menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-columns: auto auto; grid-gap: 0.5em; margin: 1em; padding-left: 0; }
+menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-columns: auto auto; grid-gap: 0.5em; margin: 0.75em; padding-left: 0; }
 .language-picker, .popup-button, .popup-close {
 	cursor:pointer;
 	line-height: 2em;
@@ -40,22 +41,34 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 .language-picker select:focus { outline: 2px solid #c89600; }
 .language-picker select option { color: black; }
 .popup-close{
-	margin-right:10px;
-	margin-top:10px;
-	font-size:1.33em;
+	margin-right:0.5em;
+	margin-top:0.5em;
+	font-size:1.5em;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 2em;
+	height: 2em;
+	line-height: 2em;
+	text-align: center;
 }
-.popup{
-	position:absolute;
-	width:auto;
+.popup {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 0;
 	overflow: hidden;
 	background-color: #333;
-	z-index:100;
-	font-size:1.5em;
+	z-index:1000;
+	font-size:1em;
 	line-height:1.5em;
-	padding:0 0 0 50px;
-	overflow:auto;
+	overflow: auto;
+	display: block;
+	transition: 0.25s ease-in height;
 }
-#about{ height:0; }
+.popup.on { height:100vh; }
+.padded { padding: 2em; }
 #lang{
 	right:0;
 	max-height:0;
@@ -65,15 +78,17 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 #lang p{
 	cursor:pointer
 }
-#about p, #about ul{
+#about p, #about ul {
 	margin-right:50px;
 }
+#about ul { list-style: disc; margin-left: 2em; }
 #fitter-holder { padding: 0em 2em; }
 #graph-holder{
 	display: block;
 	width:100%;
 	height: 100%;
 }
+#graph-holder svg { width: 100%; max-width: 100%; }
 #param-holder {
 	width:100%;
 	position:relative;
@@ -96,16 +111,19 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 .param-slider{
 	background-color:rgba(200,150,0,1);
 }
-.noUi-target { border: 0; box-shadow: none; }
-.noUi-base, .noUi-handle, .noUi-value{ cursor:pointer; }
-.noUi-pips-horizontal{ padding-top: 0.25em; }
+.noUi-target { border: 0px; box-shadow: none; }
+.noUi-base, .noUi-handle, .noUi-value { cursor:pointer; }
+.noUi-pips-horizontal{ padding-top: 0; }
+.noUi-target, .noUi-connects { border-radius: 0; border-top-left-radius: 4px; border-top-right-radius: 4px; }
+.noUi-marker-horizontal.noUi-marker { margin-left: -2px; }
+.noUi-marker-horizontal.noUi-marker:first-child { margin-left: 0; }
 .noUi-horizontal { height: 1em; }
 .noUi-horizontal .noUi-tooltip {
 	font-size:1.2em;
 	background:none;
 	color:white;
 	border:none;
-	background: #c89600;
+	background: white;
 	color: black;
 	line-height: 1em;
 	top: calc(100% + 0.4em);
@@ -121,7 +139,7 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 	height: 0;
 	border-left: 0.4em solid transparent;
 	border-right:0.4em solid transparent;
-	border-bottom: 0.4em solid #c89600;
+	border-bottom: 0.4em solid white;
 	clear: both;
 }
 .noUi-value-large{
@@ -130,7 +148,7 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 }
 .noUi-marker-horizontal.noUi-marker-large {
 	height:0.5em;
-	background-color:white;
+	background-color:rgba(200,150,0,1);
 }
 .axis text { fill:white; font-size:2em; }
 .axis path { stroke:white; }
