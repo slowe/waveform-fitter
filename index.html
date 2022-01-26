@@ -47,7 +47,11 @@
 			language = new Lang({
 				'ready': function(){
 					console.log('new WaveFitter');
-					wf = new WaveFitter({"paramholder":"param-holder","graphholder":"graph-holder"});
+					wf = new WaveFitter({
+						"paramholder":"param-holder",
+						"graphholder":"graph-holder",
+						"lang":this
+					});
 				}
 			});
 		}

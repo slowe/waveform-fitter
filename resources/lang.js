@@ -1,7 +1,6 @@
 /*
-	Language Updater
+	Language Updater - updates Liquid/Jekyll style variables
 */
-
 (function(root){
 	
 	if(!root.ready){
@@ -49,7 +48,7 @@
 		};
 		this.updateLanguage = function(lang){
 			console.info('Lang.updateLanguage',lang);
-			var html = document.documentElement.outerHTML;
+			var html = this._content+'';
 			var post = {'lang':lang};
 			var site = {'data':{'translations':this.translations}};
 			html = html.replace(/\-\-\-/g,"").replace(/\{\{([^\}]*)\}\}/g,function(m,p1){
@@ -68,7 +67,6 @@
 			document.open();
 			document.write('<!DOCTYPE html>'+html);
 			document.close();
-
 			var _obj = this;
 			if(opt && typeof opt.ready==="function") ready(function(){ opt.ready.call(_obj); });
 			
