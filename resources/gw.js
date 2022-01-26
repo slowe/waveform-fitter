@@ -108,36 +108,35 @@
 	function WaveFitter(opts){
 
 		var _wf=this;
-		this._opts = opts||{};
-		console.info('WaveFitter',opts);
+		console.info('WaveFitter');
 		this.getUrlVars();
-		this.debug=(this.urlVars.debug) ? this.urlVars.debug : false;
-		
+		this.debug = (this.urlVars.debug) ? this.urlVars.debug : false;
+		this.holders = {'param':'','graph':''};
+		this.init = function(opts){
+			this._opts = opts||{};
+			this.holders={
+				'param':(opts.paramholder ? opts.paramholder : 'param-holder'),
+				'graph':(opts.graphholder ? opts.graphholder : 'graph-holder')
+			}
+			this.lang = opts.lang;
+			this.langdict = opts.lang.translations;
+
+			if(_wf.debug) console.log('loaded');
+			this.addSliders();
+			this.setLang();
+			this.initGraph();
+		};
+		window.addEventListener("resize",function(){ _wf.initGraph(); });
+
 		this.initData();
-		this.holders={
-			'param':(opts.paramholder ? opts.paramholder : 'param-holder'),
-			'graph':(opts.graphholder ? opts.graphholder : 'graph-holder')
-		}
-		this.addSliders();
-		// this.initGraph();
-		this.defaults={
-			'lang':'en'
-		}
-		this.lang = opts.lang;
-		this.langdict = opts.lang.translations;
-		this.toLoad=2;
-		this.loaded=0;
-		this.whenLoaded();
-		window.addEventListener("resize",function(){
-			_wf.initGraph();
-		});
+
 		return this;
 	}
 
 	WaveFitter.prototype.getUrlVars = function(){
 		var vars = {},hash;
 		var url = window.location.href;
-		if (window.location.href.indexOf('?')!=-1){
+		if(window.location.href.indexOf('?')!=-1){
 			var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
 			url = window.location.href.slice(0,window.location.href.indexOf('?'));
 			for(var i = 0; i < hashes.length; i++){
@@ -152,27 +151,19 @@
 
 	WaveFitter.prototype.makeUrl= function(newKeys,full){
 		newUrlVars = this.urlVars;
-		allKeys = {"lang":[this.lang.lang,this.defaults.lang]}
+		allKeys = {"lang":[this.lang.lang]}
 		for(key in allKeys){
-			if (this.debug){console.log(key,allKeys[key]);}
-			if ((allKeys[key][0]!=allKeys[key][1])){
-				newUrlVars[key]=allKeys[key][0]
-			}else{
-				delete newUrlVars[(key)]
-			}
+			if(this.debug){console.log(key,allKeys[key]);}
+			if((allKeys[key][0]!=allKeys[key][1])) newUrlVars[key]=allKeys[key][0];
+			else delete newUrlVars[(key)];
 		}
 		if(this.debug){console.log('new urlvars',newUrlVars);}
 		for(key in newKeys){
-			if (!newKeys[key]){
-				delete newUrlVars[key];
-			}else{
-				newUrlVars[key]=newKeys[key];
-			}
+			if(!newKeys[key]) delete newUrlVars[key];
+			else newUrlVars[key]=newKeys[key];
 		}
 		newUrl = this.url+'?';
-		for(key in newUrlVars){
-			newUrl=newUrl + key+'='+newUrlVars[key]+'&';
-		}
+		for(key in newUrlVars) newUrl=newUrl + key+'='+newUrlVars[key]+'&';
 		newUrl = newUrl.slice(0,newUrl.length-1);
 		return newUrl;
 	}
@@ -194,12 +185,6 @@
 		for(var i = 0; i < bits.length; i++) o = o[bits[i]];
 		return o[lang]||"";
 	}
-	WaveFitter.prototype.whenLoaded = function(){
-		if (_wf.debug){console.log('loaded');}
-		this.setLang();
-		this.initGraph();
-		return this;
-	}
 	WaveFitter.prototype.initData = function(){
 		this.data={dataH:new WaveData(dataH),simNR:new ScaleableWaveData(simNR)};
 		// this.data.dataH.shiftt(-0.423);
@@ -210,7 +195,7 @@
 		this.data.trange=[this.data.dataH.t[0],this.data.dataH.t.slice(-1)];
 		// this.data.trange=[-0.2,0.8];
 		this.data.hrange=[-2,2];
-		
+		return this;
 	}
 
 	WaveFitter.prototype.setScales = function(){
@@ -267,9 +252,8 @@
 		var langR=parseFloat(d3.select('body').style('width')) - (document.getElementById('lang-button').offsetLeft + document.getElementById('lang-button').offsetWidth);
 		document.getElementById('lang').style.right=langR;
 		d3.selectAll('.lang-item').on('click',function(d,i){
-			console.log(this,this.getAttribute('data-lang'));
 			_wf.lang.setLanguage(this.getAttribute('data-lang'));
-			window.location.replace(_wf.makeUrl({'lang':_wf.lang.lang}));
+			//window.location.replace(_wf.makeUrl({'lang':_wf.lang.lang}));
 			hideLang();
 		})
 		

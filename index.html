@@ -40,18 +40,18 @@
 	<script type="text/javascript" src="resources/lang.js"></script>
 	<script type="text/javascript">
 	var language,wf;
-
+	// If we haven't created a WaveFitter we do that
+	if(!wf) wf = new WaveFitter();
 	ready(function(){
 		if(!language){
 			language = new Lang({
 				'ready': function(){
-					if(!wf){
-						wf = new WaveFitter({
-							"paramholder":"param-holder",
-							"graphholder":"graph-holder",
-							"lang":this
-						});
-					}
+					// Update the WaveFitter
+					wf.init({
+						"paramholder":"param-holder",
+						"graphholder":"graph-holder",
+						"lang":this
+					});
 				}
 			});
 		}
