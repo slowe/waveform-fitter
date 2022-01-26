@@ -19,10 +19,11 @@ body{
 
 .page {
 	display: grid;
-	grid-template-rows: 5em 7em calc(100vh - 12em);
+	grid-template-rows: 5em 8em calc(100vh - 13em);
 }
 h1 { font-size: 1.6em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
-h2 { font-size: 1.3em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
+h2 { font-size: 1.2em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
+sub { position: relative; }
 a { color:yellow; }
 #title{ text-align: center; position: relative; }
 menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-columns: auto auto; grid-gap: 0.5em; margin: 1em; padding-left: 0; }
@@ -81,34 +82,27 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 	display:grid;
 	grid-template-columns: repeat(2,1fr);
 	grid-gap: 2em;
-	padding: 0 1em;
+	padding: 0 2em;
 }
-.param-outer {
-	display: grid;
-	grid-template-columns: auto 1fr;
-	grid-gap: 1em;
-}
+.param-outer h2 { line-height: 1.5em; height: 1.5em; }
 .param-title {
 	text-align:center;
 }
-.param-title h2{
+.param-title h2 {
 	margin:0;
 	line-height:1.5em;
 }
 .param-slider-outer {
-	margin:3em 2em 3em 2em;
+	margin:2.5em 2em 2.5em 0em;
 }
 .param-slider{
 	background-color:rgba(200,150,0,1);
 }
-.noUi-base, .noUi-handle, .noUi-value{
-cursor:pointer;
-}
-.noUi-pips-horizontal{
-	padding-top:5px;
-}
+.noUi-base, .noUi-handle, .noUi-value{ cursor:pointer; }
+.noUi-pips-horizontal{ padding-top: 0.25em; }
+.noUi-horizontal { height: 1em; }
 .noUi-horizontal .noUi-tooltip{
-	font-size:1.5em;
+	font-size:1.25em;
 	background:none;
 	color:white;
 	border:none;
@@ -127,11 +121,11 @@ cursor:pointer;
 	clear: both;
 }
 .noUi-value-large{
-	font-size:1.5em;
+	font-size:1.25em;
 	color:white;
 }
-.noUi-marker-horizontal.noUi-marker-large{
-	height:8px;
+.noUi-marker-horizontal.noUi-marker-large {
+	height:0.5em;
 	background-color:white;
 }
 .axis text { fill:white; font-size:2em; }

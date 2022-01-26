@@ -36,7 +36,16 @@
 				</div>
 			</menu>
 		</div>
-		<div id="param-holder"></div>
+		<div id="param-holder">
+			<div id="param-mass" class="param-outer">
+				<h2>{{site.data.translations[data.totalmass][post.lang]}}</h2>
+				<div class="param-slider-outer"></div>
+			</div>
+			<div id="param-dist" class="param-outer">
+				<h2>{{site.data.translations[data.distance][post.lang]}}</h2>
+				<div class="param-slider-outer"></div>
+			</div>
+		</div>
 		<div id="fitter-holder">
 			<div id="graph-holder"></div>
 		</div>
@@ -74,6 +83,8 @@
 					// Update the WaveFitter
 					wf.init({
 						"paramholder":"param-holder",
+						"mass": "param-mass",
+						"dist": "param-dist",
 						"graphholder":"graph-holder",
 						"lang":this
 					});

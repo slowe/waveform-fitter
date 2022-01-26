@@ -116,6 +116,8 @@
 			this._opts = opts||{};
 			this.holders={
 				'param':(opts.paramholder ? opts.paramholder : 'param-holder'),
+				'mass':(opts.mass),
+				'dist':(opts.dist),
 				'graph':(opts.graphholder ? opts.graphholder : 'graph-holder')
 			}
 			this.lang = opts.lang;
@@ -392,76 +394,72 @@
 		//     .attr('id','param-title')
 		// .append('h2')
 		//     .html('Simulation parameters')
-		let massdiv=d3.select('#'+this.holders.param).append('div')
-			.attr('class','param-outer')
-			.attr('id','param-mass')
-		massdiv.append('div')
-			.attr('class','param-title')
-			.attr('id','mass-title')
-			.append('h2').html('<span class="label translate" data-content="data.totalmass">Total Mass<br>(M<sub>☉</sub>)</span><span class="value"></span>')
-		massdiv.append('div')
-			.attr('class','param-slider-outer')
-		.append('div')
-			.attr('class','param-slider')
-			.attr('id','mass-slider')
-		var mass_slider=document.getElementById('mass-slider')
-		var massrange=[];
-		for (var v=_wf.ranges.mass[0];v<=_wf.ranges.mass[1];v+=10){massrange.push(v);}
-		var pipFormats={'0':'a','1':'b'};
-		noUiSlider.create(mass_slider, {
-			start: [_wf.mass],
-			connect: true,
-			range: {
-				'min': _wf.ranges.mass[0],
-				'max': _wf.ranges.mass[1]
-			},
-			tooltips:[true],
-			pips: {mode: 'positions', values: [0,100],density:100,},
-		} );
-		mass_slider.noUiSlider.on('update',function(values,handle){
-			var value = values[handle];
-			// d3.select('#mass-title').select('span.value').html(value);
-			_wf.mass=value;
-			_wf.updatePlot(0);
-		})
-		d3.select(mass_slider).selectAll('.noUi-value').on('click',function(){
-			mass_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
-		});
+		var massdiv = document.querySelector('#'+this.holders.mass+' .param-slider-outer');
+		if(massdiv){
+			mass_slider = document.createElement('div');
+			mass_slider.classList.add('param-slider');
+			mass_slider.setAttribute('id','mass-slider');
+			massdiv.appendChild(mass_slider);
+
+			var massrange=[];
+			for (var v=_wf.ranges.mass[0];v<=_wf.ranges.mass[1];v+=10){massrange.push(v);}
+			var pipFormats={'0':'a','1':'b'};
+			noUiSlider.create(mass_slider, {
+				start: [_wf.mass],
+				connect: true,
+				range: {
+					'min': _wf.ranges.mass[0],
+					'max': _wf.ranges.mass[1]
+				},
+				tooltips:[true],
+				pips: {mode: 'positions', values: [0,100],density:100,},
+			} );
+			mass_slider.noUiSlider.on('update',function(values,handle){
+				var value = values[handle];
+				// d3.select('#mass-title').select('span.value').html(value);
+				_wf.mass=value;
+				_wf.updatePlot(0);
+			});
+			mass_slider.querySelector('.noUi-value').addEventListener('click',function(e){
+				console.log(e);
+				mass_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
+			});
+		}
+
 		
-		let distdiv=d3.select('#'+this.holders.param).append('div')
-			.attr('class','param-outer')
-			.attr('id','param-dist')
-		distdiv.append('div')
-			.attr('class','param-title')
-			.attr('id','dist-title')
-			.append('h2').html('<span class="label translate" data-content="data.distance">Distance<br>(Mpc)</span><span class="value"></span>')
-		distdiv.append('div')
-			.attr('class','param-slider-outer')
-		.append('div')
-			.attr('class','param-slider')
-			.attr('id','dist-slider')
-		var dist_slider=document.getElementById('dist-slider');
-		var distrange=[];
-		for (var v=_wf.ranges.dist[0];v<=_wf.ranges.dist[1];v+=100){distrange.push(v);}
-		noUiSlider.create(dist_slider, {
-			start: [_wf.dist],
-			connect: true,
-			range: {
-				'min': _wf.ranges.dist[0],
-				'max': _wf.ranges.dist[1]
-			},
-			tooltips:[true],
-			pips: {mode: 'positions', values: [0,100],density:100}
-		});
-		dist_slider.noUiSlider.on('update',function(values,handle){
-			var value = values[handle];
-			// d3.select('#dist-title').select('span.value').html(value);
-			_wf.dist=value;
-			_wf.updatePlot(100);
-		})
-		d3.select(dist_slider).selectAll('.noUi-value').on('click',function(){
-			dist_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
-		});
+		var distdiv = document.querySelector('#'+this.holders.dist+' .param-slider-outer');
+		console.log(distdiv,this.holders.dist);
+		if(distdiv){
+			dist_slider = document.createElement('div');
+			dist_slider.classList.add('param-slider');
+			dist_slider.setAttribute('id','dist-slider');
+			distdiv.appendChild(dist_slider);
+
+			var distrange=[];
+			for (var v=_wf.ranges.dist[0];v<=_wf.ranges.dist[1];v+=100){distrange.push(v);}
+			noUiSlider.create(dist_slider, {
+				start: [_wf.dist],
+				connect: true,
+				range: {
+					'min': _wf.ranges.dist[0],
+					'max': _wf.ranges.dist[1]
+				},
+				tooltips:[true],
+				pips: {mode: 'positions', values: [0,100],density:100}
+			});
+			dist_slider.noUiSlider.on('update',function(values,handle){
+				var value = values[handle];
+				// d3.select('#dist-title').select('span.value').html(value);
+				_wf.dist=value;
+				_wf.updatePlot(100);
+			})
+			dist_slider.querySelector('.noUi-value').addEventListener('click',function(e){
+				console.log(e);
+				dist_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
+			});
+
+		}
+
 	}
 
 

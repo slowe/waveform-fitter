@@ -71,10 +71,10 @@ text:
 data:
 
     totalmass:
-        en: Total Mass<br>(M<sub>☉</sub>)
-        cy: Cyfanswm Màs<br>(M<sub>☉</sub>)
+        en: Total Mass (M<sub>☉</sub>)
+        cy: Cyfanswm Màs (M<sub>☉</sub>)
 
     distance:
-        en: Distance<br>(Mpc)
-        cy: Pellter<br>(Mpc)
+        en: Distance (Mpc)
+        cy: Pellter (Mpc)
 
