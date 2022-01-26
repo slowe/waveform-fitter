@@ -1,0 +1,80 @@
+text:
+    title:
+        en: Waveform Fitter
+        cy: Gosodwr Ffurf y Don
+
+    close:
+        en: Close
+        cy: Diwedd
+
+    about:
+        heading:
+            en: About
+            cy: Amdanom ni
+
+        intro:
+            en: This web-app allows you to match simulation of gravitational wave data to real data originating from the merger of two black holes.
+            cy: Mae’r ap gwe hwn yn eich galluogi i gyfateb efelychiad o ddata ton ddisgyrchol i ddata go iawn sy’n deillio o’r ddau dwll du yn uno.
+
+        params:
+            en: Use the sliders to adjust the basic parameters of the simulation to match the data. The parameters are:
+            cy: Defnyddiwch y llithryddion i addasu paramedrau sylfaenol yr efelychiad i gyfateb y data. Y paramedrau yw’r canlynol:
+
+        param:
+            mass:
+                en: The total mass of the two black holes, measured in M<sub>☉</sub> (Solar mass; the mass of the Sun)
+                cy: Cyfanswm màs y ddau dwll du, a fesurwyd mewn M☉ (Màs solar; màs yr Haul)
+
+            dist:
+                en: The distance of the source from Earth in Mpc (Megaparsec; 3.26 million light years).
+                cy: Pellter y ffynhonnell o’r Ddaear mewn Mpc (Megaparsec; 3.26 miliwn o flynyddoedd golau)
+
+        data:
+            en: Data is for GW150914 (from the LIGO-Hanford detector). Simulation assumes equal-mass.
+            cy: Mae data ar gyfer GW150914 (o’r synhwyrydd LIGO-Hanford). Efelychiad yn rhagdybio màs cyfartal.
+
+        credit:
+            en: Written and maintained by Chris North (Cardiff University) for the LIGO-Virgo Collaboration. Simulation credit: Mark Hannam (Cardiff University). <a href="https://github.com/cardiffgravity/waveform-fitter">Source code</a>
+            cy: Ysgrifennwyd a chynhaliwyd gan Chris North (Prifysgol Caerdydd) ar gyfer Cydweithrediad LIGO-Virgo. Cydnabyddiaeth yr efelychiad: Mark Hannam (Prifysgol Caerdydd). <a href="https://github.com/cardiffgravity/waveform-fitter">Côd gwreiddiol</a>
+
+        button:
+            en: About
+            cy: Ynghylch
+
+    language:
+        heading:
+            en: Change Language
+            cy: Newid iaith
+
+        button:
+            en: Change Language
+            cy: Newid iaith
+
+    legend:
+        data:
+            en: Data
+            cy: Data
+
+        simulation:
+            en: Simulation
+            cy: Efelychu
+
+    axis:
+        time:
+            en: Time (s)
+            cy: Amser (e)
+
+        strain:
+            en: Strain x10^21
+            cy: Straen x10^21
+
+data:
+
+    totalmass:
+        en: Total Mass<br>(M<sub>☉</sub>)
+        cy: Cyfanswm Màs<br>(M<sub>☉</sub>)
+
+    distance:
+        en: Distance<br>(Mpc)
+        cy: Pellter<br>(Mpc)
+
