@@ -1,5 +1,6 @@
 /*
 	Language Updater - updates Liquid/Jekyll style variables
+	Version 0.1
 */
 (function(root){
 	
@@ -12,25 +13,28 @@
 	}
 
 	function Lang(opt){
+
 		this.lang = (navigator ? (navigator.userLanguage||navigator.systemLanguage||navigator.language||browser.language) : "en");
-		this._content = document.documentElement.outerHTML;
-		this.init = function(){
+		var _content = document.documentElement.outerHTML;
+		var _obj = this;
+
+		function init(){
 			console.info('Lang.getLanguages');
 			fetch("_data/languages.yml").then(response => {
 				if(!response.ok) throw new Error('Network response was not OK');
 				return response.text();
 			}).then(txt => {
-				this._languages = txt;
-				this.languages = parseYAML(txt);
+				//this._languages = txt;
+				_obj.languages = parseYAML(txt);
 				// If the language code doesn't exist check if a version of it without a hyphen exists
-				if(!this.languages[this.lang] && this.lang.indexOf("-") > 0) this.lang = this.lang.replace(/\-.*/g,"");
+				if(!_obj.languages[_obj.lang] && _obj.lang.indexOf("-") > 0) _obj.lang = _obj.lang.replace(/\-.*/g,"");
 				// If the language code still doesn't exist set it to Welsh (default)
-				if(!this.languages[this.lang]) this.lang = "cy";
-				this.getLanguageData();
+				if(!_obj.languages[_obj.lang]) _obj.lang = "cy";
+				_obj.getLanguageData();
 			}).catch(error => {
 				console.error('There has been a problem with your fetch operation:', error);
 			});
-			return this;
+			return _obj;
 		};
 		this.getLanguageData = function(){
 			console.info('Lang.getLanguageData');
@@ -38,17 +42,18 @@
 				if(!response.ok) throw new Error('Network response was not OK');
 				return response.text();
 			}).then(txt => {
-				this._text = txt;
+				//this._text = txt;
 				this.translations = parseYAML(txt);
-				this.updateLanguage(this.lang);
+				this.setLanguage(this.lang);
 			}).catch(error => {
 				console.error('There has been a problem with your fetch operation:', error);
 			});
 			return this;
 		};
-		this.updateLanguage = function(lang){
-			console.info('Lang.updateLanguage',lang);
-			var html = this._content+'';
+		this.setLanguage = function(lang){
+			this.lang = lang;
+			console.info('Lang.setLanguage',lang);
+			var html = _content+'';
 			var post = {'lang':lang};
 			var site = {'data':{'translations':this.translations}};
 			html = html.replace(/\-\-\-/g,"").replace(/\{\{([^\}]*)\}\}/g,function(m,p1){
@@ -67,12 +72,11 @@
 			document.open();
 			document.write('<!DOCTYPE html>'+html);
 			document.close();
-			var _obj = this;
 			if(opt && typeof opt.ready==="function") ready(function(){ opt.ready.call(_obj); });
 			
 			return this;
 		};
-		this.init();
+		init();
 		return this;
 	}
 
