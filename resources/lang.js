@@ -20,7 +20,7 @@
 
 		function init(){
 			console.info('Lang.getLanguages');
-			fetch("_data/languages.yml").then(response => {
+			fetch("data/languages.yml").then(response => {
 				if(!response.ok) throw new Error('Network response was not OK');
 				return response.text();
 			}).then(txt => {
@@ -49,7 +49,7 @@
 		};
 		this.getLanguageData = function(){
 			console.info('Lang.getLanguageData');
-			fetch("_data/translations.yml").then(response => {
+			fetch("data/translations.yml").then(response => {
 				if(!response.ok) throw new Error('Network response was not OK');
 				return response.text();
 			}).then(txt => {
