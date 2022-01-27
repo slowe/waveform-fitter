@@ -15,7 +15,6 @@
 	function Lang(opt){
 
 		this.lang = (navigator ? (navigator.userLanguage||navigator.systemLanguage||navigator.language||browser.language) : "en");
-		var _content = document.documentElement.outerHTML;
 		var _obj = this;
 
 		function init(){
@@ -62,14 +61,14 @@
 			return this;
 		};
 		this.setLanguage = function(lang){
-			this.lang = lang;
+			this.lang = lang||this.lang;
 			console.info('Lang.setLanguage',lang);
-			var html = _content+'';
 			var post = {'lang':lang};
 			var site = {'data':{'translations':this.translations}};
-			html = html.replace(/\-\-\-/g,"").replace(/\{\{([^\}]*)\}\}/g,function(m,p1){
-				var txt = "";
-				txt = p1.replace(/\[([^\]]*)\]/,function(m,p1){
+			var els = document.querySelectorAll('[data-translate]');
+			for(var i = 0; i < els.length; i++){
+				txt = els[i].getAttribute('data-translate');
+				txt = txt.replace(/\[([^\]]*)\]/,function(m,p1){
 					if(p1.indexOf('text')==0 || p1.indexOf('data')==0) p1 = "."+p1;
 					return p1;
 				});
@@ -79,11 +78,9 @@
 					console.error('Value of '+txt+' does not evaluate.');
 					txt = "";
 				}
-				return txt;
-			})
-			document.open();
-			document.write('<!DOCTYPE html>'+html);
-			document.close();
+				if(els[i].ownerSVGElement) els[i].textContent = txt;
+				else els[i].innerHTML = txt;
+			}
 			
 			if(opt && typeof opt.ready==="function") ready(function(){ _obj.updatePicker(); opt.ready.call(_obj); });
 			
@@ -252,6 +249,9 @@
 
 	function parse(s) {
 		return parseTokens(s, tokenize(s));
+	}
+	function clone(el){
+		return JSON.parse(JSON.stringify(el));
 	}
 
 	root.parseYAML = parse;

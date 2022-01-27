@@ -124,14 +124,13 @@
 					if(!response.ok) throw new Error('Network response was not OK');
 					return response.json();
 				}).then(json => {
-					console.log(json);
 					_wf.wavedata = json;
-					loaded();
+					_wf.initData();
+					_wf.addSliders();
+					_wf.initGraph();
 				}).catch(error => {
 					console.error('There has been a problem with your fetch operation:', error);
 				});
-			}else{
-				loaded();
 			}
 
 			// Re-attach the window event
@@ -139,13 +138,6 @@
 
 			return this;
 		};
-
-
-		function loaded(){
-			_wf.initData();
-			_wf.addSliders();
-			_wf.initGraph();
-		}
 
 
 		return this;
@@ -308,12 +300,12 @@
 		// Make x-axis
 		xaxis = svgEl('g').appendTo(this.svg).addClass("x-axis axis").attr({'id':'x-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
 		makeAxis(xaxis,this.scales.x);
-		svgEl('text').appendTo(xaxis).addClass("x-axis axis-label translate").attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px",'text-anchor':'middle'}).html(this.getTl('text.axis.time'));
+		svgEl('text').appendTo(xaxis).addClass("x-axis axis-label translate").attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px",'text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time'));
 
 		// Make y-axis
 		yaxis = svgEl('g').appendTo(this.svg).addClass("y-axis axis").attr({'id':'y-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
 		makeAxis(yaxis,this.scales.y);
-		svgEl('text').appendTo(yaxis).addClass("y-axis axis-label translate").attr({'x':-this.scales.graphHeight/2,'y':6,'transform':'rotate(-90)','text-anchor':'middle','dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px"}).html(this.getTl('text.axis.strain'));
+		svgEl('text').appendTo(yaxis).addClass("y-axis axis-label translate").attr({'x':-this.scales.graphHeight/2,'y':6,'transform':'rotate(-90)','text-anchor':'middle','dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px",'data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain'));
 
 		// Add data group
 		data = svgEl("g").appendTo(this.svg).attr({"id":"data-g","transform":"translate("+this.scales.svgMargin.left+","+(this.scales.svgMargin.top) + ")",'clip-path':'url(#clip)'});
@@ -365,9 +357,9 @@
 
 		var legg = svgEl('g').appendTo(this.svg).addClass('legend').attr('transform',"translate("+(this.scales.svgMargin.left+this.scales.svgWidth*0.05)+"," + (this.scales.svgMargin.top+this.scales.svgHeight*0.05) + ")");
 		svgEl('line').appendTo(legg).addClass('line data').attr({'x1':0,'y1':0,'x2':(this.scales.svgWidth*0.05).toFixed(1),'y2':0});
-		svgEl('text').appendTo(legg).addClass('leg-text data translate').attr('x',(this.scales.svgWidth*0.07).toFixed(1)).attr('y',0).html(this.getTl('text.legend.data'));
-		svgEl('line').appendTo(legg).addClass('line sim').attr('x1',0).attr('y1',30).attr('x2',(this.scales.svgWidth*0.05).toFixed(1)).attr('y2',30);
-		svgEl('text').appendTo(legg).addClass('leg-text sim translate').attr('x',(this.scales.svgWidth*0.07).toFixed(1)).attr('y',30).html(this.getTl('text.legend.simulation'));
+		svgEl('text').appendTo(legg).addClass('leg-text data translate').attr({'x':(this.scales.svgWidth*0.07).toFixed(1),'y':0,'data-translate':'site.data.translations[text.legend.data][post.lang]'}).html(this.getTl('text.legend.data'));
+		svgEl('line').appendTo(legg).addClass('line sim').attr({'x1':0,'y1':30,'x2':(this.scales.svgWidth*0.05).toFixed(1),'y2':30});
+		svgEl('text').appendTo(legg).addClass('leg-text sim translate').attr({'x':(this.scales.svgWidth*0.07).toFixed(1),'y':30,'data-translate':'site.data.translations[text.legend.simulation][post.lang]'}).html(this.getTl('text.legend.simulation'));
 
 		return this;
 	}
