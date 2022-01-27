@@ -11,11 +11,20 @@
 			else document.addEventListener('DOMContentLoaded', fn);
 		};
 	}
-
+	function Range(min,max){
+		this.min = min;
+		this.max = max;
+		this.range = max-min;
+		this.frac = function(t){ return (t-this.min)/this.range; };
+		this.valueFromFrac = function(f){ return this.min + f*this.range; }
+		this.domain = function(mn,mx){ this._domain = new Range(mn,mx); return this; };
+		this.value = function(v){ return (this._domain||this).valueFromFrac(this.frac(v)); }
+		return this;
+	}
 	class WaveData{
 		constructor(datain){
-			if (Array.isArray(datain)){
-				if ((datain.length>0)&(datain[0].length>=2)){
+			if(Array.isArray(datain)){
+				if((datain.length>0)&(datain[0].length>=2)){
 					this.t=datain.map(function(value,index){return value[0]})
 					this.h=datain.map(function(value,index){return value[1]})
 				}else{
@@ -23,9 +32,9 @@
 					return(null);
 				}
 			}else{
-				if (datain.hasOwnProperty('t')&datain.hasOwnProperty('t')){
-					this.t=datain.t;
-					this.h=datain.h
+				if(datain.hasOwnProperty('t')&datain.hasOwnProperty('t')){
+					this.t = datain.t;
+					this.h = datain.h
 				}else{
 					console.log("datain needs to be 2D array or object with data in properties t and h")
 					return(null);
@@ -34,37 +43,33 @@
 			this.linedata();
 		}
 		linedata(){
-			this.lineData=[];
-			for (var i=0;i<this.t.length;i++){
-				this.lineData.push({'t':this.t[i],'h':this.h[i]})
-			}
-			this.tint=d3.scaleLinear().range([0,this.t.length])
-			this.tint.domain([this.t[0],this.t.slice(-1)])
+			this.lineData = [];
+			for(var i = 0 ; i < this.t.length ; i++) this.lineData.push({'t':this.t[i],'h':this.h[i]})
+			// Set the range of the data
+			this.data = new Range(this.t[0], this.t[this.t.length-1]);
+			this.data.domain(0,this.t.length);
+			// Set the range of the indices
 		}
 		getH(t){
-			if (Array.isArray(t)){
-				var h0=[];
-				for (var i=0;i<t.length;i++){
-					h0.push(this.getH(t[i]));
-				}
+			var h0,i;
+			if(Array.isArray(t)){
+				h0 = [];
+				for(i = 0 ; i < t.length ; i++) h0.push(this.getH(t[i]));
 			}else{
-				var idx=this.tint(t);
-				var h0;
-				if (idx<0){
-					h0=NaN;
-				}else if(idx>this.t.length-1){
-					h0=0;
+				var idx = this.data.value(t);
+				if(idx < 0){
+					h0 = NaN;
+				}else if(idx > this.t.length-1){
+					h0 = 0;
 				}else{
-					let i0=Math.floor(idx), i1=Math.ceil(idx),di=idx%1;
-					var h0=(1-di)*this.h[i0] + di*this.h[i1];
+					let i0 = Math.floor(idx), i1 = Math.ceil(idx), di = idx%1;
+					h0 = (1-di)*this.h[i0] + di*this.h[i1];
 				};
 			}
 			return h0;
 		}
 		shiftt(t0){
-			for (let i=0;i<this.t.length;i++){
-				this.t[i]+=t0;
-			}
+			for(let i = 0 ; i < this.t.length; i++) this.t[i] += t0;
 			this.linedata();
 		}
 	}
@@ -72,11 +77,11 @@
 	class ScaleableWaveData extends WaveData{
 		constructor(datain,mass=65,dist=420){
 			super(datain);
-			this.t0=0.423;
-			this.M0=65;
-			this.D0=420;
-			this.mass=(mass)?mass:65;
-			this.dist=(dist)?dist:420;
+			this.t0 = 0.423;
+			this.M0 = 65;
+			this.D0 = 420;
+			this.mass = (mass) ? mass : 65;
+			this.dist = (dist) ? dist : 420;
 			this.scale(mass,dist);
 		}
 		scale(m,d,tout){
@@ -148,7 +153,6 @@
 		this.url = url;
 	}
 
-
 	WaveFitter.prototype.makeUrl= function(newKeys,full){
 		newUrlVars = this.urlVars;
 		allKeys = {"lang":[this.lang.lang]}
@@ -177,175 +181,182 @@
 		return o[lang]||"";
 	}
 	WaveFitter.prototype.initData = function(){
-		this.data={dataH:new WaveData(dataH),simNR:new ScaleableWaveData(simNR)};
-		this.ranges={mass:[20,100],dist:[100,800]}
-		this.mass=this.ranges.mass[0] + Math.random()*(this.ranges.mass[1]-this.ranges.mass[0]);
-		this.dist=this.ranges.dist[0] + Math.random()*(this.ranges.dist[1]-this.ranges.dist[0]);
-		this.data.trange=[this.data.dataH.t[0],this.data.dataH.t.slice(-1)];
-		// this.data.trange=[-0.2,0.8];
-		this.data.hrange=[-2,2];
+		this.data = {dataH: new WaveData(dataH), simNR: new ScaleableWaveData(simNR)};
+		this.ranges = {mass: [20,100], dist:[100,800]}
+		this.mass = this.ranges.mass[0] + Math.random()*(this.ranges.mass[1]-this.ranges.mass[0]);
+		this.dist = this.ranges.dist[0] + Math.random()*(this.ranges.dist[1]-this.ranges.dist[0]);
+		this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
+		this.data.hrange = [-2,2];
 		return this;
 	}
 
 	WaveFitter.prototype.setScales = function(){
-		this.scales={}
-		this.scales.svgWidth=Math.floor(document.getElementById(this.holders.graph).offsetWidth);
-		this.scales.svgHeight=document.getElementById(this.holders.graph).offsetHeight||Math.floor(this.scales.svgWidth/2);
-		this.scales.svgMargin={'left':80,'right':10,'top':10,'bottom':80}
-		this.scales.graphWidth=this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
-		this.scales.graphHeight=this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
+		this.scales = {}
+		this.scales.svgWidth = Math.floor(document.getElementById(this.holders.graph).offsetWidth);
+		this.scales.svgHeight = document.getElementById(this.holders.graph).offsetHeight||Math.floor(this.scales.svgWidth/2);
+		this.scales.svgMargin = {'left':80,'right':10,'top':10,'bottom':80}
+		this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
+		this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
 		
 		// set axis scales
-		this.scales.xScale = d3.scaleLinear().range([0, this.scales.graphWidth])
-		this.scales.xScale.domain(this.data.trange)
-		this.scales.xAxis = d3.axisBottom(this.scales.xScale)
-			.tickSize(-this.scales.graphHeight)
-		this.scales.yScale = d3.scaleLinear().range([this.scales.graphHeight,0]);
-		this.scales.yScale.domain(this.data.hrange);
-		this.scales.yAxis = d3.axisLeft(this.scales.yScale)
-			.tickSize(-this.scales.graphWidth)
+		this.scales.x = {
+			'key': 't',
+			'dir': 'bottom',
+			'ticks': {'spacing':0.02,'length':-this.scales.graphHeight},
+			'scale':(new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth),
+			'width': this.scales.graphWidth,
+			'height': this.scales.graphHeight
+		};
+		this.scales.y = {
+			'key': 'h',
+			'dir': 'left',
+			'ticks': {'spacing':0.5,'length':-this.scales.graphWidth},
+			'scale':(new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0),
+			'width': this.scales.graphWidth,
+			'height': this.scales.graphHeight
+		};
+		return this;
 	}
+
+
+	function makeAxis(el,props){
+		var tick,v,translate,attrline,attrtext,attr,d;
+		attr = {'fill':'none','font-size':'10','font-family':'sans-serif'};
+
+		if(props.dir=="left"){
+			attr['text-anchor'] = 'end';
+			d = 'M'+props.width+','+props.height+'H0.5V0.5H'+props.width;
+		}else if(props.dir=="bottom"){
+			attr['text-anchor'] = 'middle';
+			d = 'M0.5,-'+props.height+'V0.5H'+props.width+'.5V-'+props.height;
+		}
+		
+		el.attr(attr);
+		
+		// Count decimal places
+		var str = (props.ticks.spacing+"");
+		var dp = 0;
+		if(str.match(".")) dp = str.split(".")[1].length;
+
+		svgEl('path').appendTo(el).addClass('domain').attr({'stroke':'#000','d':d});
+
+		for(v = props.scale.min ; v <= props.scale.max; v += props.ticks.spacing){
+			attr = {'opacity':1};
+			attrline = {'stroke':'#000'};
+			attrtext = {'fill':'#000'};
+			translate = "";
+			p2 = "";
+			if(props.dir=="left"){
+				attr['transform'] = 'translate(0,'+props.scale.value(v).toFixed(1)+')';
+				attrline["x2"] = -props.ticks.length;
+				attrtext["x"] = -3;
+				attrtext["dy"] = "0.32em";
+			}
+			if(props.dir=="bottom"){
+				attr['transform'] = 'translate('+props.scale.value(v).toFixed(1)+',0)';
+				attrline["y2"] = props.ticks.length;
+				attrtext["y"] = 3;
+				attrtext["dy"] = "0.71em";
+			}
+			tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
+			svgEl('line').appendTo(tick).attr(attrline);
+			svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));//.replace(/(\.[0-9]*)0$/g,function(m,p1){ return p1; }).replace(/\.$/,""));
+		}
+		return el;
+	}
+
 	WaveFitter.prototype.initGraph = function(){
-		var _wf=this;
-		_wf.setScales();
+
+		this.setScales();
 
 		document.getElementById('about-button').addEventListener('click',function(){ showAbout(); });
 		document.getElementById('about-close').addEventListener('click',function(){ hideAbout(); });
 		document.getElementById(this.holders.graph).style.height = '';
 
-		/* NEW
-		var hid = document.getElementById(this.holders.graph);
-		hid.innerHTML = "";
-		_wf.svg = document.createElement('svg');
-		_wf.svg.classList.add('graph');
-		_wf.svg.style.width = (_wf.scales.svgWidth)+'px';
-		_wf.svg.style.height = (_wf.scales.svgHeight)+'px';
-		hid.appendChild(_wf.svg);
-		*/
-		var hid=d3.select('#'+this.holders.graph);
-		hid.selectAll('*').remove();
-		_wf.svg=hid.append('svg')
-			.attr("class","graph")
-			.attr("width", (_wf.scales.svgWidth)+'px')
-			.attr("height", (_wf.scales.svgHeight)+'px');
-			
-		var clip = _wf.svg.append("defs").append("svg:clipPath")
-			.attr("id", "clip")
-			.append("svg:rect")
-			.attr("width", _wf.scales.graphWidth )
-			.attr("height", _wf.scales.graphHeight )
-			.attr("x", 0)
-			.attr("y", 0);
+		var hid,defs,cp,rect;
+
+		hid = document.getElementById(this.holders.graph);
+		this.svg = hid.querySelector('svg');
+		hid.appendChild(this.svg);
+		this.svg.classList.add('graph');
+		this.svg.setAttribute('width',(this.scales.svgWidth));
+		this.svg.setAttribute('height',(this.scales.svgHeight));
+		defs = svgEl('defs').appendTo(this.svg);
 		
-		// make x-axis
-		_wf.svg.append("g")
-			.attr("class", "x-axis axis")
-			.attr("id","x-axis-g")
-			.attr("transform", "translate("+_wf.scales.svgMargin.left+"," +
-				(_wf.scales.graphHeight + _wf.scales.svgMargin.top) + ")");
-		_wf.svg.select(".x-axis.axis").call(_wf.scales.xAxis)
-		_wf.svg.select(".x-axis.axis").append('text')
-			.attr("class", "x-axis axis-label translate")
-			.attr('data-content','text.axis.time')
-			.attr("x", _wf.scales.graphWidth/2)
-			.attr("y", (_wf.scales.svgMargin.bottom/2)+"px")
-			.style("font-size",(_wf.scales.svgMargin.bottom/4)+"px")
-			.attr("text-anchor","middle")
-			.text(_wf.getTl('text.axis.time'))
-			
-		// make y-axis
-		_wf.svg.append("g")
-			.attr("class", "y-axis axis")
-			.attr("id","y-axis-g")
-			.attr("transform", "translate("+_wf.scales.svgMargin.left+"," +
-				_wf.scales.svgMargin.top + ")");
-		
-		_wf.svg.select(".y-axis.axis").call(_wf.scales.yAxis)
-		_wf.svg.select(".y-axis.axis").append("text")
-			.attr("class", "y-axis axis-label translate")
-			.attr('data-content','text.axis.strain')
-			.attr("transform", "rotate(-90)")
-			.attr("y", 6)
-			.attr("x",-_wf.scales.graphHeight/2)
-			.attr("dy", (-_wf.scales.svgMargin.left/2)+"px")
-			.style("font-size",(_wf.scales.svgMargin.left/4)+"px")
-			.attr("text-anchor","middle")
-			.text(_wf.getTl('text.axis.strain'));
-		
-		_wf.svg.append("g")
-			.attr("id","data-g")
-			.attr("transform", "translate("+_wf.scales.svgMargin.left+"," +
-				(_wf.scales.svgMargin.top) + ")")
-			.attr('clip-path','url(#clip)');
-		
-		_wf.drawData();
-		_wf.addLegend();
+		cp = svgEl('clipPath');
+		cp.appendTo(defs).attr('id','clip');
+		svgEl('rect').appendTo(cp).attr({'x':0,'y':0,'width':this.scales.graphWidth,'height':this.scales.graphHeight});
+
+		// Make x-axis
+		xaxis = svgEl('g').appendTo(this.svg).addClass("x-axis axis").attr({'id':'x-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
+		makeAxis(xaxis,this.scales.x);
+		svgEl('text').appendTo(xaxis).addClass("x-axis axis-label translate").attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px",'text-anchor':'middle'}).html(this.getTl('text.axis.time'));
+
+		// Make y-axis
+		yaxis = svgEl('g').appendTo(this.svg).addClass("y-axis axis").attr({'id':'y-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
+		makeAxis(yaxis,this.scales.y);
+		svgEl('text').appendTo(yaxis).addClass("y-axis axis-label translate").attr({'x':-this.scales.graphHeight/2,'y':6,'transform':'rotate(-90)','text-anchor':'middle','dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px"}).html(this.getTl('text.axis.strain'));
+
+		// Add data group
+		data = svgEl("g").appendTo(this.svg).attr({"id":"data-g","transform":"translate("+this.scales.svgMargin.left+","+(this.scales.svgMargin.top) + ")",'clip-path':'url(#clip)'});
+
+		this.drawData();
+		this.addLegend();
+	}
+	
+	function makePath(data,props){
+		//console.log('makePath',data,props);
+		var d = '';
+		for(var i = 0; i < data.length; i++){
+			d += (i==0 ? 'M':'L')+props.x.scale.value(data[i][props.x.key]).toFixed(2)+','+props.y.scale.value(data[i][props.y.key]).toFixed(2);
+		}
+		return d;
 	}
 
 	WaveFitter.prototype.drawData = function(){
-		var _wf=this;
-		this.lineFn = d3.line()
-			.x(function(d) { return _wf.scales.xScale(d.t); })
-			.y(function(d) { return _wf.scales.yScale(d.h); })
-		d3.select('#data-g').append('path')
-			.data([_wf.data.dataH.lineData])
-			.attr('class','line data')
-			.attr('id','line-data')
-			.attr('d',_wf.lineFn)
-			.attr('stroke-width',2)
-			.attr('fill','none')
 
-		_wf.data.plotSim=_wf.data.simNR.scale(_wf.mass,_wf.dist,_wf.data.dataH.t);    
-		d3.select('#data-g').append('path')
-			.data([_wf.data.plotSim.lineData])
-			.attr('class','line sim')
-			.attr('id','line-sim')
-			.attr('d',_wf.lineFn)
-			.attr('stroke-width',2)
-			.attr('fill','none')
+		var g = this.svg.querySelector('#data-g');
+
+		this.line = svgEl('path').appendTo(g).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none','d':makePath(this.data.dataH.lineData,this.scales)});
+
+		this.data.plotSim = this.data.simNR.scale(this.mass,this.dist,this.data.dataH.t);
+		this.sim = svgEl('path').appendTo(g).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none','d':makePath(this.data.plotSim.lineData,this.scales)});
+
+		return this;
 	}
+
+	function svgElement(t){
+		this._el = document.createElementNS('http://www.w3.org/2000/svg',t);
+		this.append = function(el){ this._el.appendChild(el); return this; };
+		this.appendTo = function(el){ if(el._el){ el._el.appendChild(this._el); }else{ el.appendChild(this._el); } return this; };
+		this.attr = function(obj,v){
+			// Build an object from a key/value pair
+			if(typeof obj==="string"){ key = obj; obj = {}; obj[key] = v; }
+			for(key in obj) this._el.setAttribute(key,obj[key]);
+			return this;
+		};
+		this.html = function(t){ this._el.textContent = t; return this; }
+		this.addClass = function(cls){ this._el.classList.add(...cls.split(" ")); return this; };
+		this.removeClass = function(){ this._el.classList.remove(...arguments); return this; };
+		this.data = function(d){ this._data = d; return this; };
+		return this;
+	}
+	function svgEl(t){ return new svgElement(t); }
+
 	WaveFitter.prototype.addLegend = function(){
-		var _wf=this;
-		var legg=this.svg.append('g')
-			.attr('class','legend')
-			.attr("transform", "translate("+(_wf.scales.svgMargin.left+_wf.scales.svgWidth*0.05)+"," +
-				(_wf.scales.svgMargin.top+_wf.scales.svgHeight*0.05) + ")")
-		legg.append('line')
-			.attr('class','line data')
-			.attr('x1',0)
-			.attr('y1',0)
-			.attr('x2',_wf.scales.svgWidth*0.05)
-			.attr('y2',0)
-		legg.append('text')
-			.attr('class','leg-text data translate')
-			.attr('data-content','text.legend.data')
-			.attr('x',_wf.scales.svgWidth*0.07)
-			.attr('y',0)
-			.text(_wf.getTl('text.legend.data'))
-		
-		legg.append('line')
-			.attr('class','line sim')
-			.attr('x1',0)
-			.attr('y1',30)
-			.attr('x2',_wf.scales.svgWidth*0.05)
-			.attr('y2',30)
-		legg.append('text')
-			.attr('class','leg-text sim translate')
-			.attr('data-content','text.legend.simulation')
-			.attr('x',_wf.scales.svgWidth*0.07)
-			.attr('y',30)
-			.text(_wf.getTl('text.legend.simulation'))
-		
+
+		var legg = svgEl('g').appendTo(this.svg).addClass('legend').attr('transform',"translate("+(this.scales.svgMargin.left+this.scales.svgWidth*0.05)+"," + (this.scales.svgMargin.top+this.scales.svgHeight*0.05) + ")");
+		svgEl('line').appendTo(legg).addClass('line data').attr({'x1':0,'y1':0,'x2':(this.scales.svgWidth*0.05).toFixed(1),'y2':0});
+		svgEl('text').appendTo(legg).addClass('leg-text data translate').attr('x',(this.scales.svgWidth*0.07).toFixed(1)).attr('y',0).html(this.getTl('text.legend.data'));
+		svgEl('line').appendTo(legg).addClass('line sim').attr('x1',0).attr('y1',30).attr('x2',(this.scales.svgWidth*0.05).toFixed(1)).attr('y2',30);
+		svgEl('text').appendTo(legg).addClass('leg-text sim translate').attr('x',(this.scales.svgWidth*0.07).toFixed(1)).attr('y',30).html(this.getTl('text.legend.simulation'));
+
+		return this;
 	}
 	WaveFitter.prototype.updatePlot = function(dur=0){
-		_wf=this;
-		_wf.data.plotSim=_wf.data.simNR.scale(_wf.mass,_wf.dist,_wf.data.dataH.t);
-		var path=d3.selectAll('#line-sim')
-			.data([_wf.data.plotSim.lineData])
-		path.transition()
-			.duration(dur)
-			.ease(d3.easeLinear)
-			.attr('d',_wf.lineFn);
+		this.data.plotSim = this.data.simNR.scale(this.mass,this.dist,this.data.dataH.t);
+		if(this.sim) this.sim.attr('d',makePath(this.data.plotSim.lineData,this.scales));
+		return this;
 	}
 	WaveFitter.prototype.addSliders = function(){
 		var _wf=this;
