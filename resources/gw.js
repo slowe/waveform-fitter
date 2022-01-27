@@ -102,7 +102,7 @@
 
 	function WaveFitter(opts){
 
-		var _wf=this;
+		var _wf = this;
 		console.info('WaveFitter');
 		this.getUrlVars();
 		this.debug = (this.urlVars.debug) ? this.urlVars.debug : false;
@@ -118,8 +118,21 @@
 			this.lang = opts.lang;
 			this.langdict = opts.lang.translations;
 
-			this.addSliders();
-			this.initGraph();
+			if(!this.wavedata){
+				console.info('Loading data from '+opts.data);
+				fetch(opts.data).then(response => {
+					if(!response.ok) throw new Error('Network response was not OK');
+					return response.json();
+				}).then(json => {
+					console.log(json);
+					_wf.wavedata = json;
+					loaded();
+				}).catch(error => {
+					console.error('There has been a problem with your fetch operation:', error);
+				});
+			}else{
+				loaded();
+			}
 
 			// Re-attach the window event
 			window.addEventListener('resize', this.resize );
@@ -127,7 +140,12 @@
 			return this;
 		};
 
-		this.initData();
+
+		function loaded(){
+			_wf.initData();
+			_wf.addSliders();
+			_wf.initGraph();
+		}
 
 
 		return this;
@@ -181,7 +199,7 @@
 		return o[lang]||"";
 	}
 	WaveFitter.prototype.initData = function(){
-		this.data = {dataH: new WaveData(dataH), simNR: new ScaleableWaveData(simNR)};
+		this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR)};
 		this.ranges = {mass: [20,100], dist:[100,800]}
 		this.mass = this.ranges.mass[0] + Math.random()*(this.ranges.mass[1]-this.ranges.mass[0]);
 		this.dist = this.ranges.dist[0] + Math.random()*(this.ranges.dist[1]-this.ranges.dist[0]);
