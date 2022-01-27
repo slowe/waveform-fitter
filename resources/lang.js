@@ -68,6 +68,7 @@
 			var els = document.querySelectorAll('[data-translate]');
 			for(var i = 0; i < els.length; i++){
 				txt = els[i].getAttribute('data-translate');
+				tgt = els[i].getAttribute('data-translate-attr');
 				txt = txt.replace(/\[([^\]]*)\]/,function(m,p1){
 					if(p1.indexOf('text')==0 || p1.indexOf('data')==0) p1 = "."+p1;
 					return p1;
@@ -78,8 +79,12 @@
 					console.error('Value of '+txt+' does not evaluate.');
 					txt = "";
 				}
-				if(els[i].ownerSVGElement) els[i].textContent = txt;
-				else els[i].innerHTML = txt;
+				if(tgt){
+					els[i].setAttribute(tgt,txt);
+				}else{
+					if(els[i].ownerSVGElement) els[i].textContent = txt;
+					else els[i].innerHTML = txt;
+				}
 			}
 			
 			if(opt && typeof opt.ready==="function") ready(function(){ _obj.updatePicker(); opt.ready.call(_obj); });
