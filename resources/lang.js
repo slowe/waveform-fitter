@@ -85,6 +85,7 @@
 					if(els[i].ownerSVGElement) els[i].textContent = txt;
 					else els[i].innerHTML = txt;
 				}
+				els[i].setAttribute('lang',this.lang);
 			}
 			
 			if(opt && typeof opt.ready==="function") ready(function(){ _obj.updatePicker(); opt.ready.call(_obj); });

@@ -25,7 +25,7 @@ h1 { font-size: 1.6em; font-weight: bold; line-height: 2.5em; }
 h2 { font-size: 1.3em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
 h3 { font-size: 1.2em; font-weight: bold; margin: 0.5em 0; line-height: 2em;}
 sub { position: relative; }
-a { color:yellow; }
+a { color:#c89600; }
 #title{ text-align: center; position: relative; }
 menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-columns: auto auto; grid-gap: 0.5em; margin: 0.75em; padding-left: 0; }
 .language-picker, .popup-button, .popup-close {
@@ -37,7 +37,7 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 .language-picker__form { display: block; grid-template-columns: auto auto; grid-gap: 0.25em; position: relative; height: 100%; }
 .language-picker select { display: inline-block; height: 100%; font: inherit; color: white; background: transparent; border: 0; cursor:inherit; }
 .language-picker label svg { position: absolute; left: 0.5em; top: 50%; transform: translate3d(0,-50%,0); height: 1.5em; width: 1.5em; }
-.language-picker select { padding-left: 2.25em; }
+.language-picker select { padding-left: 2em; }
 .language-picker select:focus { outline: 2px solid #c89600; }
 .language-picker select option { color: black; }
 .popup-close{
