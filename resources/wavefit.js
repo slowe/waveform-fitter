@@ -15,27 +15,27 @@
 		this.max = max;
 		this.range = max-min;
 		this.frac = function(t){ return (t-this.min)/this.range; };
-		this.valueFromFrac = function(f){ return this.min + f*this.range; }
+		this.valueFromFrac = function(f){ return this.min + f*this.range; };
 		this.domain = function(mn,mx){ this._domain = new Range(mn,mx); return this; };
-		this.value = function(v){ return (this._domain||this).valueFromFrac(this.frac(v)); }
+		this.value = function(v){ return (this._domain||this).valueFromFrac(this.frac(v)); };
 		return this;
 	}
 	class WaveData{
 		constructor(datain){
 			if(Array.isArray(datain)){
 				if((datain.length>0)&(datain[0].length>=2)){
-					this.t=datain.map(function(value,index){return value[0]})
-					this.h=datain.map(function(value,index){return value[1]})
+					this.t=datain.map(function(value,index){return value[0];});
+					this.h=datain.map(function(value,index){return value[1];});
 				}else{
-					console.log("datain needs to be 2D array with dimension Nx2 for N datapoints",datain.length,datain[0].length)
+					console.log("datain needs to be 2D array with dimension Nx2 for N datapoints",datain.length,datain[0].length);
 					return(null);
 				}
 			}else{
 				if(datain.hasOwnProperty('t')&datain.hasOwnProperty('t')){
 					this.t = datain.t;
-					this.h = datain.h
+					this.h = datain.h;
 				}else{
-					console.log("datain needs to be 2D array or object with data in properties t and h")
+					console.log("datain needs to be 2D array or object with data in properties t and h");
 					return(null);
 				}
 			}
@@ -43,14 +43,14 @@
 		}
 		linedata(){
 			this.lineData = [];
-			for(var i = 0 ; i < this.t.length ; i++) this.lineData.push({'t':this.t[i],'h':this.h[i]})
+			for(var i = 0 ; i < this.t.length ; i++) this.lineData.push({'t':this.t[i],'h':this.h[i]});
 			// Set the range of the data
 			this.data = new Range(this.t[0], this.t[this.t.length-1]);
 			this.data.domain(0,this.t.length);
 			// Set the range of the indices
 		}
 		getH(t){
-			var h0,i;
+			var h0,i,i0,i1,di;
 			if(Array.isArray(t)){
 				h0 = [];
 				for(i = 0 ; i < t.length ; i++) h0.push(this.getH(t[i]));
@@ -61,14 +61,14 @@
 				}else if(idx > this.t.length-1){
 					h0 = 0;
 				}else{
-					let i0 = Math.floor(idx), i1 = Math.ceil(idx), di = idx%1;
+					i0 = Math.floor(idx), i1 = Math.ceil(idx), di = idx%1;
 					h0 = (1-di)*this.h[i0] + di*this.h[i1];
-				};
+				}
 			}
 			return h0;
 		}
 		shiftt(t0){
-			for(let i = 0 ; i < this.t.length; i++) this.t[i] += t0;
+			for(var i = 0 ; i < this.t.length; i++) this.t[i] += t0;
 			this.linedata();
 		}
 	}
@@ -90,10 +90,11 @@
 				tout=this.t;
 			}
 			var dout=[];
-			for(var i=0;i<tout.length;i++){
-				let tScale=(tout[i]-this.t0)*this.M0/m + this.t0;
-				let hout=this.getH(tScale)*(m/this.M0)*(this.D0/d);
-				if (!Number.isNaN(hout)){dout.push([tout[i],hout]);}
+      var tScale,hout,i;
+			for(i = 0 ; i < tout.length ; i++){
+				tScale=(tout[i]-this.t0)*this.M0/m + this.t0;
+				hout=this.getH(tScale)*(m/this.M0)*(this.D0/d);
+				if(!Number.isNaN(hout)){dout.push([tout[i],hout]);}
 			}
 			return(new WaveData(dout));
 		}
@@ -101,50 +102,30 @@
 
 	function WaveFitter(opts){
 
-		var _wf = this;
 		console.info('WaveFitter');
+		this._opts = opts||{};
 		this.getUrlVars();
 		this.debug = (this.urlVars.debug) ? this.urlVars.debug : false;
 		this.holders = {'param':'','graph':''};
+		this.scales = {};
+
 
 		// Set properties
 		this.props = {'mass':{'range':[20,100],'slider':null},'dist':{'range':[100,800],'slider':null}};
 		this.props.mass.value = this.props.mass.range[0] + Math.random()*(this.props.mass.range[1]-this.props.mass.range[0]);
 		this.props.dist.value = this.props.dist.range[0] + Math.random()*(this.props.dist.range[1]-this.props.dist.range[0]);
 
-		this.init = function(opts){
-			this._opts = opts||{};
-			this.holders={
-				'param':(opts.paramholder ? opts.paramholder : 'param-holder'),
-				'mass':(opts.mass),
-				'dist':(opts.dist),
-				'graph':(opts.graphholder ? opts.graphholder : 'graph-holder')
-			}
-			this.lang = opts.lang;
-			this.langdict = opts.lang.translations;
-
-			this.addSliders();
-
-			if(!this.wavedata){
-				console.info('Loading data from '+opts.data);
-				fetch(opts.data).then(response => {
-					if(!response.ok) throw new Error('Network response was not OK');
-					return response.json();
-				}).then(json => {
-					_wf.wavedata = json;
-					_wf.initData();
-					_wf.initGraph();
-				}).catch(error => {
-					console.error('There has been a problem with your fetch operation:', error);
-				});
-			}
-
-			// Re-attach the window event
-			window.addEventListener('resize', this.resize );
-
-			return this;
+		this.holders={
+			'param':(opts.paramholder ? opts.paramholder : 'param-holder'),
+			'mass':(opts.mass),
+			'dist':(opts.dist),
+			'graph':(opts.graphholder ? opts.graphholder : 'graph-holder')
 		};
+		
+		this.addSliders();
+		this.initGraph();
 
+		if(!this.wavedata && this._opts.data) this.loadData(this._opts.data);
 
 		return this;
 	}
@@ -152,7 +133,38 @@
 	WaveFitter.prototype.resize = function(){
 		console.info('resize');
 		return this;
-	}
+	};
+
+	WaveFitter.prototype.loadData = function(file){
+		console.info('Loading data from '+file);
+		var _wf = this;
+		fetch(file).then(response => {
+			if(!response.ok) throw new Error('Network response was not OK');
+			return response.json();
+		}).then(json => {
+			console.info('Loaded',json);
+			_wf.updateData(json).updateGraph();
+		}).catch(error => {
+			console.error('There has been a problem with your fetch operation:', error);
+		});
+		return this;
+	};
+
+	WaveFitter.prototype.setLanguage = function(lang){
+
+		console.info('WaveFitter.setLangage',lang);
+		this._opts.lang = lang;
+		this.lang = lang;
+		this.langdict = lang.translations;
+
+		this.addSliders();
+		this.initGraph();
+
+		// Re-attach the window event
+		window.addEventListener('resize', this.resize );
+
+		return this;
+	};
 
 	WaveFitter.prototype.getUrlVars = function(){
 		var vars = {},hash;
@@ -167,11 +179,12 @@
 		}
 		this.urlVars = vars;
 		this.url = url;
-	}
+	};
 
 	WaveFitter.prototype.makeUrl= function(newKeys,full){
-		newUrlVars = this.urlVars;
-		allKeys = {"lang":[this.lang.lang]}
+		var newUrlVars = this.urlVars;
+		var allKeys = {"lang":[this.lang.lang]};
+		var key,newUrl;
 		for(key in allKeys){
 			if(this.debug){console.log(key,allKeys[key]);}
 			if((allKeys[key][0]!=allKeys[key][1])) newUrlVars[key]=allKeys[key][0];
@@ -186,54 +199,38 @@
 		for(key in newUrlVars) newUrl=newUrl + key+'='+newUrlVars[key]+'&';
 		newUrl = newUrl.slice(0,newUrl.length-1);
 		return newUrl;
-	}
+	};
+
 	WaveFitter.prototype.getTl = function(code){
 		var _wf = this;
-		var lang = _wf.lang.lang;
-		var o = clone(_wf.langdict);
-		// Step through the bits of our code e.g. text.about.heading
-		var bits = code.split(/\./);
-		for(var i = 0; i < bits.length; i++) o = o[bits[i]];
-		return o[lang]||"";
-	}
-	WaveFitter.prototype.initData = function(){
+		if(_wf.lang){
+			var lang = _wf.lang.lang;
+			var o = clone(_wf.langdict);
+			// Step through the bits of our code e.g. text.about.heading
+			var bits = code.split(/\./);
+			for(var i = 0; i < bits.length; i++) o = o[bits[i]];
+			return o[lang]||"";
+		}else{
+			return "";
+		}
+	};
+
+	WaveFitter.prototype.updateData = function(json){
+		this.wavedata = json;
 		this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR)};
 		this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
 		this.data.hrange = [-2,2];
+
+		this.scales.x.scale = (new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth);
+		this.scales.y.scale = (new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0);
+
 		return this;
-	}
+	};
 
-	WaveFitter.prototype.setScales = function(){
-		this.scales = {}
-		this.scales.svgWidth = Math.floor(document.getElementById(this.holders.graph).offsetWidth);
-		this.scales.svgHeight = document.getElementById(this.holders.graph).offsetHeight||Math.floor(this.scales.svgWidth/2);
-		this.scales.svgMargin = {'left':80,'right':10,'top':10,'bottom':80}
-		this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
-		this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
-		
-		// set axis scales
-		this.scales.x = {
-			'key': 't',
-			'dir': 'bottom',
-			'ticks': {'spacing':0.02,'length':-this.scales.graphHeight},
-			'scale':(new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth),
-			'width': this.scales.graphWidth,
-			'height': this.scales.graphHeight
-		};
-		this.scales.y = {
-			'key': 'h',
-			'dir': 'left',
-			'ticks': {'spacing':0.5,'length':-this.scales.graphWidth},
-			'scale':(new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0),
-			'width': this.scales.graphWidth,
-			'height': this.scales.graphHeight
-		};
-		return this;
-	}
+	function Axis(el,props){
+		console.log('Axis',el,props);
 
-
-	function makeAxis(el,props){
-		var tick,v,translate,attrline,attrtext,attr,d;
+		var tick,translate,attrline,attrtext,attr,d;
 		attr = {'fill':'none','font-size':'10','font-family':'sans-serif'};
 
 		if(props.dir=="left"){
@@ -253,75 +250,121 @@
 
 		svgEl('path').appendTo(el).addClass('domain').attr({'stroke':'#000','d':d});
 
-		for(v = props.scale.min ; v <= props.scale.max; v += props.ticks.spacing){
-			attr = {'opacity':1};
-			attrline = {'stroke':'#000'};
-			attrtext = {'fill':'#000'};
-			translate = "";
-			p2 = "";
-			if(props.dir=="left"){
-				attr['transform'] = 'translate(0,'+props.scale.value(v).toFixed(1)+')';
-				attrline["x2"] = -props.ticks.length;
-				attrtext["x"] = -3;
-				attrtext["dy"] = "0.32em";
+		this.setScale = function(s){
+			console.log('Axis.setScale',s);
+			props.scale = s;
+			this.updateTicks();
+		};
+		this.updateTicks = function(){
+			console.log('Axis.updateTicks');
+			var ticks = el._el.querySelectorAll('.tick');
+			var t,v,p2;
+			for(t = 0; t < ticks.length; t++) ticks[t].parentNode.removeChild(ticks[t]);
+			for(v = props.scale.min ; v <= props.scale.max; v += props.ticks.spacing){
+				attr = {'opacity':1};
+				attrline = {'stroke':'#000'};
+				attrtext = {'fill':'#000'};
+				translate = "";
+				p2 = "";
+				if(props.dir=="left"){
+					attr.transform = 'translate(0,'+props.scale.value(v).toFixed(1)+')';
+					attrline.x2 = -props.ticks.length;
+					attrtext.x = -3;
+					attrtext.dy = "0.32em";
+				}
+				if(props.dir=="bottom"){
+					attr.transform = 'translate('+props.scale.value(v).toFixed(1)+',0)';
+					attrline.y2 = props.ticks.length;
+					attrtext.y = 3;
+					attrtext.dy = "0.71em";
+				}
+				tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
+				svgEl('line').appendTo(tick).attr(attrline);
+				svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));//.replace(/(\.[0-9]*)0$/g,function(m,p1){ return p1; }).replace(/\.$/,""));
 			}
-			if(props.dir=="bottom"){
-				attr['transform'] = 'translate('+props.scale.value(v).toFixed(1)+',0)';
-				attrline["y2"] = props.ticks.length;
-				attrtext["y"] = 3;
-				attrtext["dy"] = "0.71em";
-			}
-			tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
-			svgEl('line').appendTo(tick).attr(attrline);
-			svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));//.replace(/(\.[0-9]*)0$/g,function(m,p1){ return p1; }).replace(/\.$/,""));
-		}
-		return el;
+		};
+
+		if(props.scale) this.updateTicks();
+		
+		return this;
 	}
 
 	WaveFitter.prototype.initGraph = function(){
-
-		this.setScales();
-
-		document.getElementById('about-button').addEventListener('click',function(){ showAbout(); });
-		document.getElementById('about-close').addEventListener('click',function(){ hideAbout(); });
-		document.getElementById(this.holders.graph).style.height = '';
-
-		var hid,defs,cp,rect;
-
-		hid = document.getElementById(this.holders.graph);
-		this.svg = hid.querySelector('svg');
-		hid.appendChild(this.svg);
-		this.svg.classList.add('graph');
-		this.svg.setAttribute('width',(this.scales.svgWidth));
-		this.svg.setAttribute('height',(this.scales.svgHeight));
-		defs = svgEl('defs').appendTo(this.svg);
 		
-		cp = svgEl('clipPath');
-		cp.appendTo(defs).attr('id','clip');
-		svgEl('rect').appendTo(cp).attr({'x':0,'y':0,'width':this.scales.graphWidth,'height':this.scales.graphHeight});
+		if(!this.svg){
 
-		// Make x-axis
-		xaxis = svgEl('g').appendTo(this.svg).addClass("x-axis axis").attr({'id':'x-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
-		makeAxis(xaxis,this.scales.x);
-		svgEl('text').appendTo(xaxis).addClass("x-axis axis-label translate").attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px",'text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time'));
+			this.scales.svgWidth = Math.floor(document.getElementById(this.holders.graph).offsetWidth);
+			this.scales.svgHeight = document.getElementById(this.holders.graph).offsetHeight||Math.floor(this.scales.svgWidth/2);
+			this.scales.svgMargin = {'left':80,'right':10,'top':10,'bottom':80};
+			this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
+			this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
 
-		// Make y-axis
-		yaxis = svgEl('g').appendTo(this.svg).addClass("y-axis axis").attr({'id':'y-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
-		makeAxis(yaxis,this.scales.y);
-		svgEl('text').appendTo(yaxis).addClass("y-axis axis-label translate").attr({'x':-this.scales.graphHeight/2,'y':6,'transform':'rotate(-90)','text-anchor':'middle','dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px",'data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain'));
+			// set axis scales
+			this.scales.x = {
+				'key': 't',
+				'dir': 'bottom',
+				'ticks': {'spacing':0.02,'length':-this.scales.graphHeight},
+				'width': this.scales.graphWidth,
+				'height': this.scales.graphHeight
+			};
+			this.scales.y = {
+				'key': 'h',
+				'dir': 'left',
+				'ticks': {'spacing':0.5,'length':-this.scales.graphWidth},
+				'width': this.scales.graphWidth,
+				'height': this.scales.graphHeight
+			};
 
-		// Add data group
-		data = svgEl("g").appendTo(this.svg).attr({"id":"data-g","transform":"translate("+this.scales.svgMargin.left+","+(this.scales.svgMargin.top) + ")",'clip-path':'url(#clip)'});
+			document.getElementById('about-button').addEventListener('click',function(){ showAbout(); });
+			document.getElementById('about-close').addEventListener('click',function(){ hideAbout(); });
+			document.getElementById(this.holders.graph).style.height = '';
 
+			var hid,defs,cp,xaxis,yaxis,data;
+
+			hid = document.getElementById(this.holders.graph);
+			this.svg = hid.querySelector('svg');
+			hid.appendChild(this.svg);
+			this.svg.classList.add('graph');
+			this.svg.setAttribute('width',(this.scales.svgWidth));
+			this.svg.setAttribute('height',(this.scales.svgHeight));
+			defs = svgEl('defs').appendTo(this.svg);
+			
+			cp = svgEl('clipPath');
+			cp.appendTo(defs).attr('id','clip');
+			svgEl('rect').appendTo(cp).attr({'x':0,'y':0,'width':this.scales.graphWidth,'height':this.scales.graphHeight});
+
+			// Make x-axis
+			xaxis = svgEl('g').appendTo(this.svg).addClass("x-axis axis").attr({'id':'x-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
+			this.xaxis = new Axis(xaxis,this.scales.x);
+			svgEl('text').appendTo(xaxis).addClass("x-axis axis-label translate").attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px",'text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time'));
+
+			// Make y-axis
+			yaxis = svgEl('g').appendTo(this.svg).addClass("y-axis axis").attr({'id':'y-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
+			this.yaxis = new Axis(yaxis,this.scales.y);
+			svgEl('text').appendTo(yaxis).addClass("y-axis axis-label translate").attr({'x':-this.scales.graphHeight/2,'y':6,'transform':'rotate(-90)','text-anchor':'middle','dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px",'data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain'));
+
+			// Add data group
+			data = svgEl("g").appendTo(this.svg).attr({"id":"data-g","transform":"translate("+this.scales.svgMargin.left+","+(this.scales.svgMargin.top) + ")",'clip-path':'url(#clip)'});
+
+			this.addLegend();
+		}
+		return this;
+	};
+	
+	WaveFitter.prototype.updateGraph = function(){
+		this.xaxis.setScale(this.scales.x.scale);
+		this.yaxis.setScale(this.scales.y.scale);
 		this.drawData();
-		this.addLegend();
-	}
+		return this;
+	};
 	
 	function makePath(data,props){
 		//console.log('makePath',data,props);
 		var d = '';
-		for(var i = 0; i < data.length; i++){
-			d += (i==0 ? 'M':'L')+props.x.scale.value(data[i][props.x.key]).toFixed(2)+','+props.y.scale.value(data[i][props.y.key]).toFixed(2);
+		if(props.x.scale && props.y.scale){
+			for(var i = 0; i < data.length; i++){
+				d += (i==0 ? 'M':'L')+props.x.scale.value(data[i][props.x.key]).toFixed(2)+','+props.y.scale.value(data[i][props.y.key]).toFixed(2);
+			}
 		}
 		return d;
 	}
@@ -336,19 +379,20 @@
 		this.sim = svgEl('path').appendTo(g).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none','d':makePath(this.data.plotSim.lineData,this.scales)});
 
 		return this;
-	}
+	};
 
 	function svgElement(t){
 		this._el = document.createElementNS('http://www.w3.org/2000/svg',t);
 		this.append = function(el){ this._el.appendChild(el); return this; };
 		this.appendTo = function(el){ if(el._el){ el._el.appendChild(this._el); }else{ el.appendChild(this._el); } return this; };
 		this.attr = function(obj,v){
+			var key;
 			// Build an object from a key/value pair
 			if(typeof obj==="string"){ key = obj; obj = {}; obj[key] = v; }
 			for(key in obj) this._el.setAttribute(key,obj[key]);
 			return this;
 		};
-		this.html = function(t){ this._el.textContent = t; return this; }
+		this.html = function(t){ this._el.textContent = t; return this; };
 		this.addClass = function(cls){ this._el.classList.add(...cls.split(" ")); return this; };
 		this.removeClass = function(){ this._el.classList.remove(...arguments); return this; };
 		this.data = function(d){ this._data = d; return this; };
@@ -365,7 +409,8 @@
 		svgEl('text').appendTo(legg).addClass('leg-text sim translate').attr({'x':(this.scales.svgWidth*0.07).toFixed(1),'y':30,'data-translate':'site.data.translations[text.legend.simulation][post.lang]'}).html(this.getTl('text.legend.simulation'));
 
 		return this;
-	}
+	};
+
 	WaveFitter.prototype.updatePlot = function(dur=0){
 		if(!this.data){
 			console.warn('No data loaded yet');
@@ -374,7 +419,8 @@
 		this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
 		if(this.sim) this.sim.attr('d',makePath(this.data.plotSim.lineData,this.scales));
 		return this;
-	}
+	};
+
 	WaveFitter.prototype.setSliderValue = function(t,v){
 		if(this.props[t] && this.props[t].slider){
 			this.props.mass.value = v;
@@ -383,7 +429,8 @@
 			console.warn('No slider for '+t+' to set value for.');
 		}
 		return this;
-	}
+	};
+
 	WaveFitter.prototype.setSliderRange = function(t,min,max){
 		if(this.props[t] && this.props[t].slider){
 			this.props[t].slider.noUiSlider.updateOptions({ range:{ 'min': min,'max': max } });
@@ -391,7 +438,8 @@
 			console.warn('No slider for '+t+' to update range for.');
 		}
 		return this;
-	}
+	};
+
 	WaveFitter.prototype.addSliders = function(){
 		var _wf=this;
 
@@ -402,7 +450,6 @@
 			this.props.mass.slider.setAttribute('id','mass-slider');
 			this.props.mass.el.appendChild(this.props.mass.slider);
 
-			var pipFormats={'0':'a','1':'b'};
 			noUiSlider.create(this.props.mass.slider, {
 				start: [_wf.props.mass.value],
 				connect: true,
@@ -416,7 +463,7 @@
 				_wf.updatePlot(0);
 			});
 			this.props.mass.slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				_wf.props.mass.slider.noUiSlider.set(Number(this.getAttribute('data-value')))
+				_wf.props.mass.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
 			});
 		}
 
@@ -438,15 +485,14 @@
 				var value = values[handle];
 				_wf.props.dist.value = value;
 				_wf.updatePlot(100);
-			})
+			});
 			this.props.dist.slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				_wf.props.dist.slider.noUiSlider.set(Number(this.getAttribute('data-value')))
+				_wf.props.dist.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
 			});
 		}
 
 		return this;
-	}
-
+	};
 
 	function showAbout(){
 		var el = document.getElementById('about');

@@ -63,22 +63,23 @@
 
 	<script type="text/javascript">
 	var language,wf;
-	// If we haven't created a WaveFitter we do that
-	if(!wf) wf = new WaveFitter();
 	ready(function(){
+
+		// If we haven't created a WaveFitter we do that
+		wf = new WaveFitter({
+			"paramholder":"param-holder",
+			"mass": "param-mass",
+			"dist": "param-dist",
+			"graphholder":"graph-holder",
+			"data": "data/wavedata.json"
+		});
+
 		if(!language){
 			language = new Lang({
 				'picker': 'language-picker-select',
 				'ready': function(){
 					// Update the WaveFitter
-					wf.init({
-						"paramholder":"param-holder",
-						"mass": "param-mass",
-						"dist": "param-dist",
-						"graphholder":"graph-holder",
-						"lang":this,
-						"data": "data/wavedata.json"
-					});
+					wf.setLanguage(this);
 				}
 			});
 		}
