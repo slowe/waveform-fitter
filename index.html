@@ -74,15 +74,13 @@
 			"data": "data/wavedata.json"
 		});
 
-		if(!language){
-			language = new Lang({
-				'picker': 'language-picker-select',
-				'ready': function(){
-					// Update the WaveFitter
-					wf.setLanguage(this);
-				}
-			});
-		}
+		language = new Lang({
+			'picker': 'language-picker-select',
+			'ready': function(){
+				// Update the WaveFitter
+				wf.setLanguage(this);
+			}
+		});
 	});
 	</script>
 </body>

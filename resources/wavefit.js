@@ -125,7 +125,10 @@
 		this.addSliders();
 		this.initGraph();
 
-		if(!this.wavedata && this._opts.data) this.loadData(this._opts.data);
+		// Attach the window event
+		window.addEventListener('resize', this.resize );
+
+		if(!this.wavedata && opts.data) this.loadData(opts.data);
 
 		return this;
 	}
@@ -153,15 +156,8 @@
 	WaveFitter.prototype.setLanguage = function(lang){
 
 		console.info('WaveFitter.setLangage',lang);
-		this._opts.lang = lang;
 		this.lang = lang;
 		this.langdict = lang.translations;
-
-		this.addSliders();
-		this.initGraph();
-
-		// Re-attach the window event
-		window.addEventListener('resize', this.resize );
 
 		return this;
 	};
@@ -181,7 +177,7 @@
 		this.url = url;
 	};
 
-	WaveFitter.prototype.makeUrl= function(newKeys,full){
+	WaveFitter.prototype.makeUrl = function(newKeys,full){
 		var newUrlVars = this.urlVars;
 		var allKeys = {"lang":[this.lang.lang]};
 		var key,newUrl;
@@ -290,6 +286,7 @@
 	}
 
 	WaveFitter.prototype.initGraph = function(){
+		console.log('initGraph',this.svg)
 		
 		if(!this.svg){
 
