@@ -1,9 +1,8 @@
 /*
-	GW WaveForm Editor v2
+	GW WaveForm Editor v2.0.1
 */
 (function(root){
 
-	var GW = root.GW || {};
 	if(!root.ready){
 		root.ready = function(fn){
 			// Version 1.1
