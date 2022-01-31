@@ -128,7 +128,7 @@
 		// Attach the window event
 		window.addEventListener('resize', this.resize );
 
-		if(!this.wavedata && opts.data) this.loadData(opts.data);
+		if(!this.wavedata && opts.data && opts.simulation) this.loadData(opts.data,opts.simulation);
 
 		return this;
 	}
@@ -138,15 +138,42 @@
 		return this;
 	};
 
-	WaveFitter.prototype.loadData = function(file){
-		console.info('Loading data from '+file);
+	function parseCSV(str) {
+		var lines = str.split(/\n/g);
+		var rows = [];
+		var r,i,c;
+		for(i = 1; i < lines.length; i++){
+			rows.push(lines[i].split(/,/g));
+			r = rows.length-1;
+			for(c = 0; c < rows[r].length; c++) rows[r][c] = parseFloat(rows[r][c]);
+		}
+		return rows;
+	}
+
+	WaveFitter.prototype.loadData = function(filedata,filesim){
+		console.info('Loading data from '+filedata+' and '+filesim);
+		
+		this.wavedata = {'dataH':null,'simNR':null};
 		var _wf = this;
-		fetch(file).then(response => {
+
+		fetch(filesim).then(response => {
 			if(!response.ok) throw new Error('Network response was not OK');
-			return response.json();
-		}).then(json => {
-			console.info('Loaded',json);
-			_wf.updateData(json).updateGraph();
+			return response.text();
+		}).then(txt => {
+			console.info('Loaded simNR');
+			_wf.wavedata.simNR = parseCSV(txt);
+			_wf.updateData();
+		}).catch(error => {
+			console.error('There has been a problem with your fetch operation:', error);
+		});
+
+		fetch(filedata).then(response => {
+			if(!response.ok) throw new Error('Network response was not OK');
+			return response.text();
+		}).then(txt => {
+			console.info('Loaded dataH');
+			_wf.wavedata.dataH = parseCSV(txt);
+			_wf.updateData();
 		}).catch(error => {
 			console.error('There has been a problem with your fetch operation:', error);
 		});
@@ -211,14 +238,22 @@
 		}
 	};
 
-	WaveFitter.prototype.updateData = function(json){
-		this.wavedata = json;
-		this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR)};
-		this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
-		this.data.hrange = [-2,2];
+	WaveFitter.prototype.updateData = function(){
 
-		this.scales.x.scale = (new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth);
-		this.scales.y.scale = (new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0);
+		if(this.wavedata.dataH && this.wavedata.simNR){	
+
+			this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR)};
+			this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
+			this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
+			this.data.hrange = [-2,2];
+
+			this.scales.x.scale = (new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth);
+			this.scales.y.scale = (new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0);
+			this.xaxis.setScale(this.scales.x.scale);
+			this.yaxis.setScale(this.scales.y.scale);
+
+			this.drawData();
+		}
 
 		return this;
 	};
@@ -349,9 +384,7 @@
 	};
 	
 	WaveFitter.prototype.updateGraph = function(){
-		this.xaxis.setScale(this.scales.x.scale);
-		this.yaxis.setScale(this.scales.y.scale);
-		this.drawData();
+
 		return this;
 	};
 	
@@ -369,11 +402,13 @@
 	WaveFitter.prototype.drawData = function(){
 
 		var g = this.svg.querySelector('#data-g');
+		console.log('g',g)
 
-		this.line = svgEl('path').appendTo(g).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none','d':makePath(this.data.dataH.lineData,this.scales)});
+		if(!this.line) this.line = svgEl('path').appendTo(g).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none'});
+		if(this.data.dataH) this.line.attr({'d':makePath(this.data.dataH.lineData,this.scales)});
 
-		this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
-		this.sim = svgEl('path').appendTo(g).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none','d':makePath(this.data.plotSim.lineData,this.scales)});
+		if(!this.sim) this.sim = svgEl('path').appendTo(g).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
+		if(this.data.plotSim) this.sim.attr({'d':makePath(this.data.plotSim.lineData,this.scales)});
 
 		return this;
 	};
