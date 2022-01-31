@@ -106,6 +106,12 @@
 		this.getUrlVars();
 		this.debug = (this.urlVars.debug) ? this.urlVars.debug : false;
 		this.holders = {'param':'','graph':''};
+
+		// Set properties
+		this.props = {'mass':{'range':[20,100],'slider':null},'dist':{'range':[100,800],'slider':null}};
+		this.props.mass.value = this.props.mass.range[0] + Math.random()*(this.props.mass.range[1]-this.props.mass.range[0]);
+		this.props.dist.value = this.props.dist.range[0] + Math.random()*(this.props.dist.range[1]-this.props.dist.range[0]);
+
 		this.init = function(opts){
 			this._opts = opts||{};
 			this.holders={
@@ -117,6 +123,8 @@
 			this.lang = opts.lang;
 			this.langdict = opts.lang.translations;
 
+			this.addSliders();
+
 			if(!this.wavedata){
 				console.info('Loading data from '+opts.data);
 				fetch(opts.data).then(response => {
@@ -125,7 +133,6 @@
 				}).then(json => {
 					_wf.wavedata = json;
 					_wf.initData();
-					_wf.addSliders();
 					_wf.initGraph();
 				}).catch(error => {
 					console.error('There has been a problem with your fetch operation:', error);
@@ -191,9 +198,6 @@
 	}
 	WaveFitter.prototype.initData = function(){
 		this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR)};
-		this.ranges = {mass: [20,100], dist:[100,800]}
-		this.mass = this.ranges.mass[0] + Math.random()*(this.ranges.mass[1]-this.ranges.mass[0]);
-		this.dist = this.ranges.dist[0] + Math.random()*(this.ranges.dist[1]-this.ranges.dist[0]);
 		this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
 		this.data.hrange = [-2,2];
 		return this;
@@ -328,7 +332,7 @@
 
 		this.line = svgEl('path').appendTo(g).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none','d':makePath(this.data.dataH.lineData,this.scales)});
 
-		this.data.plotSim = this.data.simNR.scale(this.mass,this.dist,this.data.dataH.t);
+		this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
 		this.sim = svgEl('path').appendTo(g).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none','d':makePath(this.data.plotSim.lineData,this.scales)});
 
 		return this;
@@ -363,72 +367,83 @@
 		return this;
 	}
 	WaveFitter.prototype.updatePlot = function(dur=0){
-		this.data.plotSim = this.data.simNR.scale(this.mass,this.dist,this.data.dataH.t);
+		if(!this.data){
+			console.warn('No data loaded yet');
+			return this;
+		}
+		this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
 		if(this.sim) this.sim.attr('d',makePath(this.data.plotSim.lineData,this.scales));
+		return this;
+	}
+	WaveFitter.prototype.setSliderValue = function(t,v){
+		if(this.props[t] && this.props[t].slider){
+			this.props.mass.value = v;
+			this.props[t].slider.noUiSlider.set(v);
+		}else{
+			console.warn('No slider for '+t+' to set value for.');
+		}
+		return this;
+	}
+	WaveFitter.prototype.setSliderRange = function(t,min,max){
+		if(this.props[t] && this.props[t].slider){
+			this.props[t].slider.noUiSlider.updateOptions({ range:{ 'min': min,'max': max } });
+		}else{
+			console.warn('No slider for '+t+' to update range for.');
+		}
 		return this;
 	}
 	WaveFitter.prototype.addSliders = function(){
 		var _wf=this;
 
-		var massdiv = document.querySelector('#'+this.holders.mass+' .param-slider-outer');
-		if(!massdiv.querySelector('.param-slider')){
-			mass_slider = document.createElement('div');
-			mass_slider.classList.add('param-slider');
-			mass_slider.setAttribute('id','mass-slider');
-			massdiv.appendChild(mass_slider);
+		this.props.mass.el = document.querySelector('#'+this.holders.mass+' .param-slider-outer');
+		if(!this.props.mass.el.querySelector('.param-slider')){
+			this.props.mass.slider = document.createElement('div');
+			this.props.mass.slider.classList.add('param-slider');
+			this.props.mass.slider.setAttribute('id','mass-slider');
+			this.props.mass.el.appendChild(this.props.mass.slider);
 
-			var massrange=[];
-			for (var v=_wf.ranges.mass[0];v<=_wf.ranges.mass[1];v+=10){massrange.push(v);}
 			var pipFormats={'0':'a','1':'b'};
-			noUiSlider.create(mass_slider, {
-				start: [_wf.mass],
+			noUiSlider.create(this.props.mass.slider, {
+				start: [_wf.props.mass.value],
 				connect: true,
-				range: {
-					'min': _wf.ranges.mass[0],
-					'max': _wf.ranges.mass[1]
-				},
+				range: { 'min': this.props.mass.range[0], 'max': this.props.mass.range[1] },
 				tooltips:[true],
 				pips: {mode: 'positions', values: [0,100],density:100,},
-			} );
-			mass_slider.noUiSlider.on('update',function(values,handle){
+			});
+			this.props.mass.slider.noUiSlider.on('update',function(values,handle){
 				var value = values[handle];
-				_wf.mass=value;
+				_wf.props.mass.value = value;
 				_wf.updatePlot(0);
 			});
-			mass_slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				mass_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
+			this.props.mass.slider.querySelector('.noUi-value').addEventListener('click',function(e){
+				_wf.props.mass.slider.noUiSlider.set(Number(this.getAttribute('data-value')))
 			});
 		}
 
-		
-		var distdiv = document.querySelector('#'+this.holders.dist+' .param-slider-outer');
-		if(!distdiv.querySelector('.param-slider')){
-			dist_slider = document.createElement('div');
-			dist_slider.classList.add('param-slider');
-			dist_slider.setAttribute('id','dist-slider');
-			distdiv.appendChild(dist_slider);
+		this.props.dist.el = document.querySelector('#'+this.holders.dist+' .param-slider-outer');
+		if(!this.props.dist.el.querySelector('.param-slider')){
+			this.props.dist.slider = document.createElement('div');
+			this.props.dist.slider.classList.add('param-slider');
+			this.props.dist.slider.setAttribute('id','dist-slider');
+			this.props.dist.el.appendChild(this.props.dist.slider);
 
-			var distrange=[];
-			for (var v=_wf.ranges.dist[0];v<=_wf.ranges.dist[1];v+=100){distrange.push(v);}
-			noUiSlider.create(dist_slider, {
-				start: [_wf.dist],
+			noUiSlider.create(this.props.dist.slider, {
+				start: [_wf.props.dist.value],
 				connect: true,
-				range: {
-					'min': _wf.ranges.dist[0],
-					'max': _wf.ranges.dist[1]
-				},
+				range: { 'min': this.props.dist.range[0], 'max': this.props.dist.range[1] },
 				tooltips:[true],
 				pips: {mode: 'positions', values: [0,100],density:100}
 			});
-			dist_slider.noUiSlider.on('update',function(values,handle){
+			this.props.dist.slider.noUiSlider.on('update',function(values,handle){
 				var value = values[handle];
-				_wf.dist=value;
+				_wf.props.dist.value = value;
 				_wf.updatePlot(100);
 			})
-			dist_slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				dist_slider.noUiSlider.set(Number(this.getAttribute('data-value')))
+			this.props.dist.slider.querySelector('.noUi-value').addEventListener('click',function(e){
+				_wf.props.dist.slider.noUiSlider.set(Number(this.getAttribute('data-value')))
 			});
 		}
+
 		return this;
 	}
 
