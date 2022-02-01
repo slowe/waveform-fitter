@@ -123,10 +123,14 @@
 		};
 
 		this.addSliders();
-		this.initGraph();
+		this.updateGraph();
 
 		// Attach the window event
-		window.addEventListener('resize', this.resize );
+		var _wf = this;
+		window.addEventListener('resize', function(){ _wf.resize(); });
+		// Attach more events
+		document.getElementById('about-button').addEventListener('click',function(){ showAbout(); });
+		document.getElementById('about-close').addEventListener('click',function(){ hideAbout(); });
 
 		if(!this.wavedata && opts.data && opts.simulation) this.loadData(opts.data,opts.simulation);
 
@@ -134,7 +138,7 @@
 	}
 	
 	WaveFitter.prototype.resize = function(){
-		console.info('resize');
+		this.updateGraph();
 		return this;
 	};
 
@@ -235,10 +239,8 @@
 			this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
 			this.data.hrange = [-2,2];
 
-			this.scales.x.scale = (new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth);
-			this.scales.y.scale = (new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0);
-			this.xaxis.setScale(this.scales.x.scale);
-			this.yaxis.setScale(this.scales.y.scale);
+			if(this.axes.x) this.axes.x.setScale((new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth));
+			if(this.axes.y) this.axes.y.setScale((new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0));
 
 			this.drawData();
 		}
@@ -246,106 +248,130 @@
 		return this;
 	};
 
-	WaveFitter.prototype.initGraph = function(){
-		console.log('initGraph',this.svg)
+	WaveFitter.prototype.updateGraph = function(){
 		
+		var holder = document.getElementById(this.holders.graph);
+		var tempsvg = null;
+
+		if(this.svg && this.svg.el){
+			// Remove the element so we can work out the size of the container
+			tempsvg = holder.removeChild(this.svg.el);
+		}
+
+		this.scales.svgWidth = Math.floor(holder.offsetWidth);
+		this.scales.svgHeight = holder.offsetHeight||Math.floor(this.scales.svgWidth/2);
+		this.scales.svgMargin = {'left':80,'right':10,'top':10,'bottom':80};
+		this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
+		this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
+
+		if(tempsvg) holder.appendChild(tempsvg);
+
+		var defs,cp,xaxis,yaxis,data;
+
 		if(!this.svg){
 
-			this.scales.svgWidth = Math.floor(document.getElementById(this.holders.graph).offsetWidth);
-			this.scales.svgHeight = document.getElementById(this.holders.graph).offsetHeight||Math.floor(this.scales.svgWidth/2);
-			this.scales.svgMargin = {'left':80,'right':10,'top':10,'bottom':80};
-			this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
-			this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
-
-			// set axis scales
-			this.scales.x = {
-				'key': 't',
-				'dir': 'bottom',
-				'ticks': {'spacing':0.02,'length':-this.scales.graphHeight},
-				'width': this.scales.graphWidth,
-				'height': this.scales.graphHeight
-			};
-			this.scales.y = {
-				'key': 'h',
-				'dir': 'left',
-				'ticks': {'spacing':0.5,'length':-this.scales.graphWidth},
-				'width': this.scales.graphWidth,
-				'height': this.scales.graphHeight
-			};
-
-			document.getElementById('about-button').addEventListener('click',function(){ showAbout(); });
-			document.getElementById('about-close').addEventListener('click',function(){ hideAbout(); });
-			document.getElementById(this.holders.graph).style.height = '';
-
-			var hid,defs,cp,xaxis,yaxis,data;
-
-			hid = document.getElementById(this.holders.graph);
-			this.svg = hid.querySelector('svg');
-			hid.appendChild(this.svg);
-			this.svg.classList.add('graph');
-			this.svg.setAttribute('width',(this.scales.svgWidth));
-			this.svg.setAttribute('height',(this.scales.svgHeight));
-			defs = svgEl('defs').appendTo(this.svg);
-			
-			cp = svgEl('clipPath');
-			cp.appendTo(defs).attr('id','clip');
-			svgEl('rect').appendTo(cp).attr({'x':0,'y':0,'width':this.scales.graphWidth,'height':this.scales.graphHeight});
-
-			// Make x-axis
-			xaxis = svgEl('g').appendTo(this.svg).addClass("x-axis axis").attr({'id':'x-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
-			this.xaxis = new Axis(xaxis,this.scales.x);
-			svgEl('text').appendTo(xaxis).addClass("x-axis axis-label translate").attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px",'text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time'));
-
-			// Make y-axis
-			yaxis = svgEl('g').appendTo(this.svg).addClass("y-axis axis").attr({'id':'y-axis-g','transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
-			this.yaxis = new Axis(yaxis,this.scales.y);
-			svgEl('text').appendTo(yaxis).addClass("y-axis axis-label translate").attr({'x':-this.scales.graphHeight/2,'y':6,'transform':'rotate(-90)','text-anchor':'middle','dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px",'data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain'));
-
-			// Add data group
-			data = svgEl("g").appendTo(this.svg).attr({"id":"data-g","transform":"translate("+this.scales.svgMargin.left+","+(this.scales.svgMargin.top) + ")",'clip-path':'url(#clip)'});
-
-			this.addLegend();
+			this.svg = {};
+			this.svg.el = holder.querySelector('svg');
+			this.svg.el.classList.add('graph');
 		}
-		return this;
-	};
-	
-	WaveFitter.prototype.updateGraph = function(){
+		
+		this.svg.el.setAttribute('width',(this.scales.svgWidth));
+		this.svg.el.setAttribute('height',(this.scales.svgHeight));
+		
+		if(!this.svg.defs){
+			this.svg.defs = svgEl('defs').appendTo(this.svg.el);
+		}
+
+		if(!this.svg.clip){
+			this.svg.clip = svgEl('clipPath');
+			this.svg.clip.appendTo(this.svg.defs).attr('id','clip');
+			this.svg.cliprect = svgEl('rect').appendTo(this.svg.clip).attr({'x':0,'y':0});
+		}
+
+		this.svg.cliprect.attr({'width':this.scales.graphWidth,'height':this.scales.graphHeight});
+
+
+		// Create axes
+		if(!this.axes) this.axes = {};
+		var xprops = {
+			'key': 't',
+			'dir': 'bottom',
+			'ticks': {'spacing':0.02,'length':-this.scales.graphHeight},
+			'width': this.scales.graphWidth,
+			'height': this.scales.graphHeight
+		};
+		if(!this.svg.xaxis){
+			// Make x-axis
+			this.svg.xaxis = svgEl('g').appendTo(this.svg.el).addClass("x-axis axis").attr({'id':'x-axis-g'});
+			this.axes.x = new Axis(this.svg.xaxis,xprops,svgEl('text').addClass("x-axis axis-label translate").attr({'text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time')));
+		}else{
+			this.axes.x.setDomain(0,this.scales.graphWidth).setProps(xprops).updateSize();
+		}
+		this.svg.xaxis.attr({'transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
+		if(this.axes.x.label) this.axes.x.label.attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px"});
+		var yprops = {
+			'key': 'h',
+			'dir': 'left',
+			'ticks': {'spacing':0.5,'length':-this.scales.graphWidth},
+			'width': this.scales.graphWidth,
+			'height': this.scales.graphHeight
+		}
+		if(!this.svg.yaxis){
+			// Make y-axis
+			this.svg.yaxis = svgEl('g').appendTo(this.svg.el).addClass("y-axis axis").attr({'id':'y-axis-g'});
+			this.axes.y = new Axis(this.svg.yaxis,yprops,svgEl('text').addClass("y-axis axis-label translate").attr({'transform':'rotate(-90)','text-anchor':'middle','data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain')));
+		}else{
+			this.axes.y.setDomain(this.scales.graphHeight,0).setProps(yprops).updateSize();
+		}
+		this.svg.yaxis.attr({'transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
+		if(this.axes.y.label) this.axes.y.label.attr({'x':-this.scales.graphHeight/2,'y':6,'dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px"});
+
+
+
+		// Make data
+		if(!this.svg.data){
+			this.svg.data = svgEl("g").appendTo(this.svg.el).attr({"id":"data-g",'clip-path':'url(#clip)'});
+		}
+		this.svg.data.attr({"transform":"translate("+this.scales.svgMargin.left+","+(this.scales.svgMargin.top) + ")"});
+		this.drawData();
+
+		// Make legend
+		if(!this.svg.legend){
+			this.svg.legend = svgEl('g').appendTo(this.svg.el).addClass('legend');
+			this.svg.items = {};
+			this.svg.items.dataline = svgEl('line').appendTo(this.svg.legend).addClass('line data').attr({'x1':0,'y1':0,'y2':0});
+			this.svg.items.datatext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text data translate').attr({'y':0,'data-translate':'site.data.translations[text.legend.data][post.lang]'}).html(this.getTl('text.legend.data'));
+			this.svg.items.simline = svgEl('line').appendTo(this.svg.legend).addClass('line sim').attr({'x1':0,'y1':30,'y2':30});
+			this.svg.items.simtext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text sim translate').attr({'y':30,'data-translate':'site.data.translations[text.legend.simulation][post.lang]'}).html(this.getTl('text.legend.simulation'));
+		}
+		// Update legend and legend items
+		this.svg.legend.attr('transform',"translate("+(this.scales.svgMargin.left+10)+"," + (this.scales.svgMargin.top+20) + ")");
+		this.svg.items.dataline.attr({'x2':(this.scales.svgWidth*0.05).toFixed(1)});
+		this.svg.items.datatext.attr({'x':(this.scales.svgWidth*0.07).toFixed(1)});
+		this.svg.items.simline.attr({'x2':(this.scales.svgWidth*0.05).toFixed(1)});
+		this.svg.items.simtext.attr({'x':(this.scales.svgWidth*0.07).toFixed(1)});
 
 		return this;
 	};
 
 	WaveFitter.prototype.drawData = function(){
 
-		var g = this.svg.querySelector('#data-g');
-		console.log('g',g)
+		if(!this.line) this.line = svgEl('path').appendTo(this.svg.data).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none'});
+		if(this.data && this.data.dataH) this.line.attr({'d':makePath(this.data.dataH.lineData,this.axes)});
 
-		if(!this.line) this.line = svgEl('path').appendTo(g).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none'});
-		if(this.data.dataH) this.line.attr({'d':makePath(this.data.dataH.lineData,this.scales)});
-
-		if(!this.sim) this.sim = svgEl('path').appendTo(g).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
-		if(this.data.plotSim) this.sim.attr({'d':makePath(this.data.plotSim.lineData,this.scales)});
+		if(!this.sim) this.sim = svgEl('path').appendTo(this.svg.data).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
+		if(this.data && this.data.plotSim) this.sim.attr({'d':makePath(this.data.plotSim.lineData,this.axes)});
 
 		return this;
 	};
 
-	WaveFitter.prototype.addLegend = function(){
-
-		var legg = svgEl('g').appendTo(this.svg).addClass('legend').attr('transform',"translate("+(this.scales.svgMargin.left+this.scales.svgWidth*0.05)+"," + (this.scales.svgMargin.top+this.scales.svgHeight*0.05) + ")");
-		svgEl('line').appendTo(legg).addClass('line data').attr({'x1':0,'y1':0,'x2':(this.scales.svgWidth*0.05).toFixed(1),'y2':0});
-		svgEl('text').appendTo(legg).addClass('leg-text data translate').attr({'x':(this.scales.svgWidth*0.07).toFixed(1),'y':0,'data-translate':'site.data.translations[text.legend.data][post.lang]'}).html(this.getTl('text.legend.data'));
-		svgEl('line').appendTo(legg).addClass('line sim').attr({'x1':0,'y1':30,'x2':(this.scales.svgWidth*0.05).toFixed(1),'y2':30});
-		svgEl('text').appendTo(legg).addClass('leg-text sim translate').attr({'x':(this.scales.svgWidth*0.07).toFixed(1),'y':30,'data-translate':'site.data.translations[text.legend.simulation][post.lang]'}).html(this.getTl('text.legend.simulation'));
-
-		return this;
-	};
-
-	WaveFitter.prototype.updatePlot = function(dur=0){
+	WaveFitter.prototype.updateCurves = function(dur=0){
 		if(!this.data){
 			console.warn('No data loaded yet');
 			return this;
 		}
 		this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
-		if(this.sim) this.sim.attr('d',makePath(this.data.plotSim.lineData,this.scales));
+		if(this.sim) this.sim.attr('d',makePath(this.data.plotSim.lineData,this.axes));
 		return this;
 	};
 
@@ -388,7 +414,7 @@
 			this.props.mass.slider.noUiSlider.on('update',function(values,handle){
 				var value = values[handle];
 				_wf.props.mass.value = value;
-				_wf.updatePlot(0);
+				_wf.updateCurves(0);
 			});
 			this.props.mass.slider.querySelector('.noUi-value').addEventListener('click',function(e){
 				_wf.props.mass.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
@@ -412,7 +438,7 @@
 			this.props.dist.slider.noUiSlider.on('update',function(values,handle){
 				var value = values[handle];
 				_wf.props.dist.value = value;
-				_wf.updatePlot(100);
+				_wf.updateCurves(100);
 			});
 			this.props.dist.slider.querySelector('.noUi-value').addEventListener('click',function(e){
 				_wf.props.dist.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
@@ -422,75 +448,84 @@
 		return this;
 	};
 
-	function Axis(el,props){
-		console.log('Axis',el,props);
+	function Axis(el,props,label){
 
-		var tick,translate,attrline,attrtext,attr,d;
-		attr = {'fill':'none','font-size':'10','font-family':'sans-serif'};
+		var tick,translate,attrline,attrtext;
+		el.attr({'fill':'none','font-size':'10','font-family':'sans-serif','text-anchor':(props.dir=="left") ? 'end' : 'middle'});
+		
+		this.key = props.key||"";
 
-		if(props.dir=="left"){
-			attr['text-anchor'] = 'end';
-			d = 'M'+props.width+','+props.height+'H0.5V0.5H'+props.width;
-		}else if(props.dir=="bottom"){
-			attr['text-anchor'] = 'middle';
-			d = 'M0.5,-'+props.height+'V0.5H'+props.width+'.5V-'+props.height;
-		}
-		
-		el.attr(attr);
-		
-		// Count decimal places
-		var str = (props.ticks.spacing+"");
 		var dp = 0;
-		if(str.match(".")) dp = str.split(".")[1].length;
 
-		svgEl('path').appendTo(el).addClass('domain').attr({'stroke':'#000','d':d});
+		this.path = svgEl('path').appendTo(el).addClass('domain').attr({'stroke':'#000'});
 
+		if(label){
+			this.label = label;
+			this.label.appendTo(el);
+		}
+
+		this.setProps = function(p){
+			if(typeof p==="object") props = p;
+			else props = {};
+			this.key = props.key||"";
+			var str = (props.ticks.spacing+"");
+			// Count decimal places
+			dp = 0;
+			if(str.match(".")) dp = str.split(".")[1].length;
+			return this;
+		};
 		this.setScale = function(s){
-			console.log('Axis.setScale',s);
-			props.scale = s;
-			this.updateTicks();
+			this.scale = s;
+			return this.updateTicks();
+		};
+		this.setDomain = function(a,b){
+			this.scale.domain(a,b);
+			return this;
 		};
 		this.updateTicks = function(){
-			console.log('Axis.updateTicks');
-			var ticks = el._el.querySelectorAll('.tick');
-			var t,v,p2;
+			var t,v,p2,ticks;
+			ticks = el._el.querySelectorAll('.tick');
 			for(t = 0; t < ticks.length; t++) ticks[t].parentNode.removeChild(ticks[t]);
-			for(v = props.scale.min ; v <= props.scale.max; v += props.ticks.spacing){
+			for(v = this.scale.min ; v <= this.scale.max; v += props.ticks.spacing){
 				attr = {'opacity':1};
 				attrline = {'stroke':'#000'};
 				attrtext = {'fill':'#000'};
 				translate = "";
 				p2 = "";
 				if(props.dir=="left"){
-					attr.transform = 'translate(0,'+props.scale.value(v).toFixed(1)+')';
+					attr.transform = 'translate(0,'+this.scale.value(v).toFixed(1)+')';
 					attrline.x2 = -props.ticks.length;
 					attrtext.x = -3;
 					attrtext.dy = "0.32em";
-				}
-				if(props.dir=="bottom"){
-					attr.transform = 'translate('+props.scale.value(v).toFixed(1)+',0)';
+				}else if(props.dir=="bottom"){
+					attr.transform = 'translate('+this.scale.value(v).toFixed(1)+',0)';
 					attrline.y2 = props.ticks.length;
 					attrtext.y = 3;
 					attrtext.dy = "0.71em";
 				}
 				tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
 				svgEl('line').appendTo(tick).attr(attrline);
-				svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));//.replace(/(\.[0-9]*)0$/g,function(m,p1){ return p1; }).replace(/\.$/,""));
+				svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));
 			}
+			return this;
 		};
+		this.updateSize = function(w,h){
+			if(!w) w = props.width;
+			if(!h) h = props.height;
+			this.path.attr({'d':(props.dir=="left") ? 'M'+w+','+h+'H0.5V0.5H'+w : 'M0.5,-'+h+'V0.5H'+w+'.5V-'+h});
+			if(this.scale) this.updateTicks();
+			return this;
+		}
 
-		if(props.scale) this.updateTicks();
+		this.setProps(props).updateSize();
 		
 		return this;
 	}
 
-	function makePath(data,props){
-		//console.log('makePath',data,props);
+	function makePath(data,axes){
 		var d = '';
-		if(props.x.scale && props.y.scale){
-			for(var i = 0; i < data.length; i++){
-				d += (i==0 ? 'M':'L')+props.x.scale.value(data[i][props.x.key]).toFixed(2)+','+props.y.scale.value(data[i][props.y.key]).toFixed(2);
-			}
+		if(axes.x.scale && axes.y.scale){
+			for(var i = 0; i < data.length; i++) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);
 		}
 		return d;
 	}
