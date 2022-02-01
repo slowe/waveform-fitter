@@ -115,13 +115,13 @@
 		this.props.mass.value = this.props.mass.range[0] + Math.random()*(this.props.mass.range[1]-this.props.mass.range[0]);
 		this.props.dist.value = this.props.dist.range[0] + Math.random()*(this.props.dist.range[1]-this.props.dist.range[0]);
 
-		this.holders={
-			'param':(opts.paramholder ? opts.paramholder : 'param-holder'),
-			'mass':(opts.mass),
-			'dist':(opts.dist),
-			'graph':(opts.graphholder ? opts.graphholder : 'graph-holder')
+		this.holders = {
+			'param': (opts.paramholder ? opts.paramholder : 'param-holder'),
+			'mass': (opts.mass),
+			'dist': (opts.dist),
+			'graph': (opts.graphholder ? opts.graphholder : 'graph-holder')
 		};
-		
+
 		this.addSliders();
 		this.initGraph();
 
@@ -137,18 +137,6 @@
 		console.info('resize');
 		return this;
 	};
-
-	function parseCSV(str) {
-		var lines = str.split(/\n/g);
-		var rows = [];
-		var r,i,c;
-		for(i = 1; i < lines.length; i++){
-			rows.push(lines[i].split(/,/g));
-			r = rows.length-1;
-			for(c = 0; c < rows[r].length; c++) rows[r][c] = parseFloat(rows[r][c]);
-		}
-		return rows;
-	}
 
 	WaveFitter.prototype.loadData = function(filedata,filesim){
 		console.info('Loading data from '+filedata+' and '+filesim);
@@ -258,68 +246,6 @@
 		return this;
 	};
 
-	function Axis(el,props){
-		console.log('Axis',el,props);
-
-		var tick,translate,attrline,attrtext,attr,d;
-		attr = {'fill':'none','font-size':'10','font-family':'sans-serif'};
-
-		if(props.dir=="left"){
-			attr['text-anchor'] = 'end';
-			d = 'M'+props.width+','+props.height+'H0.5V0.5H'+props.width;
-		}else if(props.dir=="bottom"){
-			attr['text-anchor'] = 'middle';
-			d = 'M0.5,-'+props.height+'V0.5H'+props.width+'.5V-'+props.height;
-		}
-		
-		el.attr(attr);
-		
-		// Count decimal places
-		var str = (props.ticks.spacing+"");
-		var dp = 0;
-		if(str.match(".")) dp = str.split(".")[1].length;
-
-		svgEl('path').appendTo(el).addClass('domain').attr({'stroke':'#000','d':d});
-
-		this.setScale = function(s){
-			console.log('Axis.setScale',s);
-			props.scale = s;
-			this.updateTicks();
-		};
-		this.updateTicks = function(){
-			console.log('Axis.updateTicks');
-			var ticks = el._el.querySelectorAll('.tick');
-			var t,v,p2;
-			for(t = 0; t < ticks.length; t++) ticks[t].parentNode.removeChild(ticks[t]);
-			for(v = props.scale.min ; v <= props.scale.max; v += props.ticks.spacing){
-				attr = {'opacity':1};
-				attrline = {'stroke':'#000'};
-				attrtext = {'fill':'#000'};
-				translate = "";
-				p2 = "";
-				if(props.dir=="left"){
-					attr.transform = 'translate(0,'+props.scale.value(v).toFixed(1)+')';
-					attrline.x2 = -props.ticks.length;
-					attrtext.x = -3;
-					attrtext.dy = "0.32em";
-				}
-				if(props.dir=="bottom"){
-					attr.transform = 'translate('+props.scale.value(v).toFixed(1)+',0)';
-					attrline.y2 = props.ticks.length;
-					attrtext.y = 3;
-					attrtext.dy = "0.71em";
-				}
-				tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
-				svgEl('line').appendTo(tick).attr(attrline);
-				svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));//.replace(/(\.[0-9]*)0$/g,function(m,p1){ return p1; }).replace(/\.$/,""));
-			}
-		};
-
-		if(props.scale) this.updateTicks();
-		
-		return this;
-	}
-
 	WaveFitter.prototype.initGraph = function(){
 		console.log('initGraph',this.svg)
 		
@@ -387,17 +313,6 @@
 
 		return this;
 	};
-	
-	function makePath(data,props){
-		//console.log('makePath',data,props);
-		var d = '';
-		if(props.x.scale && props.y.scale){
-			for(var i = 0; i < data.length; i++){
-				d += (i==0 ? 'M':'L')+props.x.scale.value(data[i][props.x.key]).toFixed(2)+','+props.y.scale.value(data[i][props.y.key]).toFixed(2);
-			}
-		}
-		return d;
-	}
 
 	WaveFitter.prototype.drawData = function(){
 
@@ -412,25 +327,6 @@
 
 		return this;
 	};
-
-	function svgElement(t){
-		this._el = document.createElementNS('http://www.w3.org/2000/svg',t);
-		this.append = function(el){ this._el.appendChild(el); return this; };
-		this.appendTo = function(el){ if(el._el){ el._el.appendChild(this._el); }else{ el.appendChild(this._el); } return this; };
-		this.attr = function(obj,v){
-			var key;
-			// Build an object from a key/value pair
-			if(typeof obj==="string"){ key = obj; obj = {}; obj[key] = v; }
-			for(key in obj) this._el.setAttribute(key,obj[key]);
-			return this;
-		};
-		this.html = function(t){ this._el.textContent = t; return this; };
-		this.addClass = function(cls){ this._el.classList.add(...cls.split(" ")); return this; };
-		this.removeClass = function(){ this._el.classList.remove(...arguments); return this; };
-		this.data = function(d){ this._data = d; return this; };
-		return this;
-	}
-	function svgEl(t){ return new svgElement(t); }
 
 	WaveFitter.prototype.addLegend = function(){
 
@@ -525,6 +421,111 @@
 
 		return this;
 	};
+
+	function Axis(el,props){
+		console.log('Axis',el,props);
+
+		var tick,translate,attrline,attrtext,attr,d;
+		attr = {'fill':'none','font-size':'10','font-family':'sans-serif'};
+
+		if(props.dir=="left"){
+			attr['text-anchor'] = 'end';
+			d = 'M'+props.width+','+props.height+'H0.5V0.5H'+props.width;
+		}else if(props.dir=="bottom"){
+			attr['text-anchor'] = 'middle';
+			d = 'M0.5,-'+props.height+'V0.5H'+props.width+'.5V-'+props.height;
+		}
+		
+		el.attr(attr);
+		
+		// Count decimal places
+		var str = (props.ticks.spacing+"");
+		var dp = 0;
+		if(str.match(".")) dp = str.split(".")[1].length;
+
+		svgEl('path').appendTo(el).addClass('domain').attr({'stroke':'#000','d':d});
+
+		this.setScale = function(s){
+			console.log('Axis.setScale',s);
+			props.scale = s;
+			this.updateTicks();
+		};
+		this.updateTicks = function(){
+			console.log('Axis.updateTicks');
+			var ticks = el._el.querySelectorAll('.tick');
+			var t,v,p2;
+			for(t = 0; t < ticks.length; t++) ticks[t].parentNode.removeChild(ticks[t]);
+			for(v = props.scale.min ; v <= props.scale.max; v += props.ticks.spacing){
+				attr = {'opacity':1};
+				attrline = {'stroke':'#000'};
+				attrtext = {'fill':'#000'};
+				translate = "";
+				p2 = "";
+				if(props.dir=="left"){
+					attr.transform = 'translate(0,'+props.scale.value(v).toFixed(1)+')';
+					attrline.x2 = -props.ticks.length;
+					attrtext.x = -3;
+					attrtext.dy = "0.32em";
+				}
+				if(props.dir=="bottom"){
+					attr.transform = 'translate('+props.scale.value(v).toFixed(1)+',0)';
+					attrline.y2 = props.ticks.length;
+					attrtext.y = 3;
+					attrtext.dy = "0.71em";
+				}
+				tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
+				svgEl('line').appendTo(tick).attr(attrline);
+				svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));//.replace(/(\.[0-9]*)0$/g,function(m,p1){ return p1; }).replace(/\.$/,""));
+			}
+		};
+
+		if(props.scale) this.updateTicks();
+		
+		return this;
+	}
+
+	function makePath(data,props){
+		//console.log('makePath',data,props);
+		var d = '';
+		if(props.x.scale && props.y.scale){
+			for(var i = 0; i < data.length; i++){
+				d += (i==0 ? 'M':'L')+props.x.scale.value(data[i][props.x.key]).toFixed(2)+','+props.y.scale.value(data[i][props.y.key]).toFixed(2);
+			}
+		}
+		return d;
+	}
+
+	function svgElement(t){
+		this._el = document.createElementNS('http://www.w3.org/2000/svg',t);
+		this.append = function(el){ this._el.appendChild(el); return this; };
+		this.appendTo = function(el){ if(el._el){ el._el.appendChild(this._el); }else{ el.appendChild(this._el); } return this; };
+		this.attr = function(obj,v){
+			var key;
+			// Build an object from a key/value pair
+			if(typeof obj==="string"){ key = obj; obj = {}; obj[key] = v; }
+			for(key in obj) this._el.setAttribute(key,obj[key]);
+			return this;
+		};
+		this.html = function(t){ this._el.textContent = t; return this; };
+		this.addClass = function(cls){ this._el.classList.add(...cls.split(" ")); return this; };
+		this.removeClass = function(){ this._el.classList.remove(...arguments); return this; };
+		this.data = function(d){ this._data = d; return this; };
+		return this;
+	}
+
+	function svgEl(t){ return new svgElement(t); }
+
+	function parseCSV(str) {
+		var lines = str.split(/\n/g);
+		var rows = [];
+		var r,i,c;
+		for(i = 1; i < lines.length; i++){
+			rows.push(lines[i].split(/,/g));
+			r = rows.length-1;
+			for(c = 0; c < rows[r].length; c++) rows[r][c] = parseFloat(rows[r][c]);
+		}
+		return rows;
+	}
 
 	function showAbout(){
 		var el = document.getElementById('about');
