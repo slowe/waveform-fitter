@@ -562,10 +562,12 @@
 	function showAbout(){
 		var el = document.getElementById('about');
 		el.classList.add('on');
+		document.body.classList.add('with-overlay');
 	}
 	function hideAbout(){
 		var el = document.getElementById('about');
 		el.classList.remove('on');
+		document.body.classList.remove('with-overlay');
 	}
 
 	function clone(el){
