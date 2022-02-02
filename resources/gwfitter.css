@@ -82,7 +82,7 @@ menu { position: absolute; top: 0px; right: 0px; display: grid; grid-template-co
 	margin-right:50px;
 }
 #about ul { list-style: disc; margin-left: 2em; }
-#fitter-holder { padding: 0em 2em; }
+#fitter-holder { padding: 0em 2em 2em 2em; }
 #graph-holder{
 	display: block;
 	width:100%;

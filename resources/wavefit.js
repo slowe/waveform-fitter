@@ -260,7 +260,7 @@
 
 		this.scales.svgWidth = Math.floor(holder.offsetWidth);
 		this.scales.svgHeight = holder.offsetHeight||Math.floor(this.scales.svgWidth/2);
-		this.scales.svgMargin = {'left':80,'right':10,'top':10,'bottom':80};
+		this.scales.svgMargin = {'left':70,'right':10,'top':10,'bottom':60};
 		this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
 		this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
 
@@ -303,12 +303,12 @@
 		if(!this.svg.xaxis){
 			// Make x-axis
 			this.svg.xaxis = svgEl('g').appendTo(this.svg.el).addClass("x-axis axis").attr({'id':'x-axis-g'});
-			this.axes.x = new Axis(this.svg.xaxis,xprops,svgEl('text').addClass("x-axis axis-label translate").attr({'text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time')));
+			this.axes.x = new Axis(this.svg.xaxis,xprops,svgEl('text').addClass("x-axis axis-label translate").attr({'dominant-baseline':'hanging','text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time')));
 		}else{
 			this.axes.x.setDomain(0,this.scales.graphWidth).setProps(xprops).updateSize();
 		}
 		this.svg.xaxis.attr({'transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
-		if(this.axes.x.label) this.axes.x.label.attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom/2)+"px"});
+		if(this.axes.x.label) this.axes.x.label.attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom-(this.scales.svgMargin.left/4)-5)+"px","font-size":(this.scales.svgMargin.left/4)+"px"});
 		var yprops = {
 			'key': 'h',
 			'dir': 'left',
@@ -319,12 +319,12 @@
 		if(!this.svg.yaxis){
 			// Make y-axis
 			this.svg.yaxis = svgEl('g').appendTo(this.svg.el).addClass("y-axis axis").attr({'id':'y-axis-g'});
-			this.axes.y = new Axis(this.svg.yaxis,yprops,svgEl('text').addClass("y-axis axis-label translate").attr({'transform':'rotate(-90)','text-anchor':'middle','data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain')));
+			this.axes.y = new Axis(this.svg.yaxis,yprops,svgEl('text').addClass("y-axis axis-label translate").attr({'dominant-baseline':'hanging','transform':'rotate(-90)','text-anchor':'middle','data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain')));
 		}else{
 			this.axes.y.setDomain(this.scales.graphHeight,0).setProps(yprops).updateSize();
 		}
 		this.svg.yaxis.attr({'transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
-		if(this.axes.y.label) this.axes.y.label.attr({'x':-this.scales.graphHeight/2,'y':6,'dy':(-this.scales.svgMargin.left/2)+"px","font-size":(this.scales.svgMargin.left/4)+"px"});
+		if(this.axes.y.label) this.axes.y.label.attr({'x':-this.scales.graphHeight/2,'y':(-this.scales.svgMargin.left*0.95 + 5)+'px',"font-size":(this.scales.svgMargin.left/4)+"px"});
 
 
 
