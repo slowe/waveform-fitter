@@ -260,7 +260,7 @@
 
 		this.scales.svgWidth = Math.floor(holder.offsetWidth);
 		this.scales.svgHeight = holder.offsetHeight||Math.floor(this.scales.svgWidth/2);
-		this.scales.svgMargin = {'left':70,'right':10,'top':10,'bottom':60};
+		this.scales.svgMargin = {'left':75,'right':18,'top':10,'bottom':60};
 		this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
 		this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
 
@@ -492,12 +492,12 @@
 				if(props.dir=="left"){
 					attr.transform = 'translate(0,'+this.scale.value(v).toFixed(1)+')';
 					attrline.x2 = -props.ticks.length;
-					attrtext.x = -3;
+					attrtext.x = -6;
 					attrtext.dy = "0.32em";
 				}else if(props.dir=="bottom"){
 					attr.transform = 'translate('+this.scale.value(v).toFixed(1)+',0)';
 					attrline.y2 = props.ticks.length;
-					attrtext.y = 3;
+					attrtext.y = 8;
 					attrtext.dy = "0.71em";
 				}
 				tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
