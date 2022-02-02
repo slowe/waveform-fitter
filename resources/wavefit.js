@@ -339,17 +339,14 @@
 		if(!this.svg.legend){
 			this.svg.legend = svgEl('g').appendTo(this.svg.el).addClass('legend');
 			this.svg.items = {};
-			this.svg.items.dataline = svgEl('line').appendTo(this.svg.legend).addClass('line data').attr({'x1':0,'y1':0,'y2':0});
-			this.svg.items.datatext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text data translate').attr({'y':0,'data-translate':'site.data.translations[text.legend.data][post.lang]'}).html(this.getTl('text.legend.data'));
-			this.svg.items.simline = svgEl('line').appendTo(this.svg.legend).addClass('line sim').attr({'x1':0,'y1':30,'y2':30});
-			this.svg.items.simtext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text sim translate').attr({'y':30,'data-translate':'site.data.translations[text.legend.simulation][post.lang]'}).html(this.getTl('text.legend.simulation'));
+			this.svg.items.dataline = svgEl('line').appendTo(this.svg.legend).addClass('line data').attr({'x1':0,'x2':(50).toFixed(1),'y1':0,'y2':0});
+			this.svg.items.datatext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text data translate').attr({'x':(50 + 10).toFixed(1),'y':0,'data-translate':'site.data.translations[text.legend.data][post.lang]'}).html(this.getTl('text.legend.data'));
+			this.svg.items.simline = svgEl('line').appendTo(this.svg.legend).addClass('line sim').attr({'x1':0,'x2':(50).toFixed(1),'y1':30,'y2':30});
+			this.svg.items.simtext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text sim translate').attr({'x':(50 + 10).toFixed(1),'y':30,'data-translate':'site.data.translations[text.legend.simulation][post.lang]'}).html(this.getTl('text.legend.simulation'));
 		}
-		// Update legend and legend items
+		// Update legend position
 		this.svg.legend.attr('transform',"translate("+(this.scales.svgMargin.left+10)+"," + (this.scales.svgMargin.top+20) + ")");
-		this.svg.items.dataline.attr({'x2':(this.scales.svgWidth*0.05).toFixed(1)});
-		this.svg.items.datatext.attr({'x':(this.scales.svgWidth*0.07).toFixed(1)});
-		this.svg.items.simline.attr({'x2':(this.scales.svgWidth*0.05).toFixed(1)});
-		this.svg.items.simtext.attr({'x':(this.scales.svgWidth*0.07).toFixed(1)});
+
 
 		return this;
 	};
