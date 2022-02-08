@@ -111,7 +111,7 @@
 
 
 		// Set properties
-		this.props = {'mass':{'range':[20,100],'slider':null},'dist':{'range':[100,800],'slider':null},'inc':{'range':[0,90],'slider':null,'values':[0,90]}};
+		this.props = {'mass':{'range':[20,100],'slider':null},'dist':{'range':[100,800],'slider':null},'inc':{'range':[0,90],'slider':null,'values':[30,60]}};
 		this.props.mass.value = this.props.mass.range[0] + Math.random()*(this.props.mass.range[1]-this.props.mass.range[0]);
 		this.props.dist.value = this.props.dist.range[0] + Math.random()*(this.props.dist.range[1]-this.props.dist.range[0]);
 
@@ -413,7 +413,7 @@
 			this.props.mass.el.appendChild(this.props.mass.slider);
 
 			noUiSlider.create(this.props.mass.slider, {
-				start: [_wf.props.mass.value],
+				start: [this.props.mass.value],
 				connect: true,
 				range: { 'min': this.props.mass.range[0], 'max': this.props.mass.range[1] },
 				tooltips:[true],
@@ -437,7 +437,7 @@
 			this.props.dist.el.appendChild(this.props.dist.slider);
 
 			noUiSlider.create(this.props.dist.slider, {
-				start: [_wf.props.dist.value],
+				start: [this.props.dist.value],
 				connect: true,
 				range: { 'min': this.props.dist.range[0], 'max': this.props.dist.range[1] },
 				tooltips:[true],
@@ -461,10 +461,11 @@
 			this.props.inc.el.appendChild(this.props.inc.slider);
 
 			noUiSlider.create(this.props.inc.slider, {
-				start: [30,60],
+				start: this.props.inc.values,
 				connect: [false,true,false],
 				range: { 'min': this.props.inc.range[0], 'max': this.props.inc.range[1] },
-				tooltips:[true,true],
+				tooltips:[{to:function(v){ return Math.round(v); }},{to:function(v){ return Math.round(v); }}],
+				step: 1,
 				pips: {mode: 'values', values: [0,90], density:100}
 			});
 
