@@ -78,3 +78,7 @@ data:
         en: Distance (Mpc)
         cy: Pellter (Mpc)
 
+    inclination:
+        en: Inclination (&deg;)
+        cy: Inclination (&deg;)
+

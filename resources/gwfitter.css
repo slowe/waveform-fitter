@@ -93,7 +93,7 @@ body.with-overlay { overflow: hidden; }
 	width:100%;
 	position:relative;
 	display:grid;
-	grid-template-columns: repeat(2,1fr);
+	grid-template-columns: repeat(3,1fr);
 	grid-gap: 2em;
 	padding: 0 3em;
 }
@@ -111,6 +111,7 @@ body.with-overlay { overflow: hidden; }
 .param-slider{
 	background-color:rgba(200,150,0,1);
 }
+.noUi-connect { background: white; opacity: 0.7; }
 .noUi-target { border: 0px; box-shadow: none; }
 .noUi-base, .noUi-handle, .noUi-value { cursor:pointer; }
 .noUi-pips-horizontal{ padding-top: 0; }
@@ -155,7 +156,7 @@ body.with-overlay { overflow: hidden; }
 .axis .tick line { stroke:white; opacity:0.2; }
 .line { stroke-width:2; }
 .line.data { stroke:rgba(0,150,200,1); }
-.line.sim { stroke:rgba(200,150,0,1); }
+.line.sim { stroke:rgba(200,150,0,1); fill: rgba(200,150,0,1); fill-opacity: 0.2; }
 .leg-text { dominant-baseline:middle; font-size:20px; }
 .leg-text.data { fill:rgba(0,150,200,1); }
 .leg-text.sim { fill:rgba(200,150,0,1); }

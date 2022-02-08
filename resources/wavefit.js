@@ -111,7 +111,7 @@
 
 
 		// Set properties
-		this.props = {'mass':{'range':[20,100],'slider':null},'dist':{'range':[100,800],'slider':null}};
+		this.props = {'mass':{'range':[20,100],'slider':null},'dist':{'range':[100,800],'slider':null},'inc':{'range':[0,90],'slider':null,'values':[0,90]}};
 		this.props.mass.value = this.props.mass.range[0] + Math.random()*(this.props.mass.range[1]-this.props.mass.range[0]);
 		this.props.dist.value = this.props.dist.range[0] + Math.random()*(this.props.dist.range[1]-this.props.dist.range[0]);
 
@@ -119,6 +119,7 @@
 			'param': (opts.paramholder ? opts.paramholder : 'param-holder'),
 			'mass': (opts.mass),
 			'dist': (opts.dist),
+			'inclination': (opts.inclination),
 			'graph': (opts.graphholder ? opts.graphholder : 'graph-holder')
 		};
 
@@ -234,8 +235,8 @@
 
 		if(this.wavedata.dataH && this.wavedata.simNR){	
 
-			this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR)};
-			this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
+			this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR), simThetaMax: new ScaleableWaveData(this.wavedata.simNR), simThetaMin: new ScaleableWaveData(this.wavedata.simNR) };
+			
 			this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
 			this.data.hrange = [-2,2];
 
@@ -357,9 +358,8 @@
 		if(this.data && this.data.dataH) this.line.attr({'d':makePath(this.data.dataH.lineData,this.axes)});
 
 		if(!this.sim) this.sim = svgEl('path').appendTo(this.svg.data).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
-		if(this.data && this.data.plotSim) this.sim.attr({'d':makePath(this.data.plotSim.lineData,this.axes)});
 
-		return this;
+		return this.updateCurves();
 	};
 
 	WaveFitter.prototype.updateCurves = function(dur=0){
@@ -367,8 +367,19 @@
 			console.warn('No data loaded yet');
 			return this;
 		}
-		this.data.plotSim = this.data.simNR.scale(this.props.mass.value,this.props.dist.value,this.data.dataH.t);
-		if(this.sim) this.sim.attr('d',makePath(this.data.plotSim.lineData,this.axes));
+		if(this.sim){
+			var d,thetamax,thetamin,inc;
+			inc = this.props.inc.slider.noUiSlider.get();
+			inc[0] = parseFloat(inc[0]);
+			inc[1] = parseFloat(inc[1]);
+			thetamin = inc[1]*Math.PI/180;
+			thetamax = inc[0]*Math.PI/180;
+			this.data.plotThetaMax = this.data.simThetaMax.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamin),2))),this.data.dataH.t);
+			this.data.plotThetaMin = this.data.simThetaMin.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamax),2))),this.data.dataH.t);
+			d = makePath(this.data.plotThetaMax.lineData,this.axes);
+			d += 'L'+makePath(this.data.plotThetaMin.lineData,this.axes,true).substr(1,);
+			this.sim.attr('d',d);
+		}
 		return this;
 	};
 
@@ -439,6 +450,31 @@
 			});
 			this.props.dist.slider.querySelector('.noUi-value').addEventListener('click',function(e){
 				_wf.props.dist.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
+			});
+		}
+
+		this.props.inc.el = document.querySelector('#'+this.holders.inclination+' .param-slider-outer');
+		if(!this.props.inc.el.querySelector('.param-slider')){
+			this.props.inc.slider = document.createElement('div');
+			this.props.inc.slider.classList.add('param-slider');
+			this.props.inc.slider.setAttribute('id','inc-slider');
+			this.props.inc.el.appendChild(this.props.inc.slider);
+
+			noUiSlider.create(this.props.inc.slider, {
+				start: [30,60],
+				connect: [false,true,false],
+				range: { 'min': this.props.inc.range[0], 'max': this.props.inc.range[1] },
+				tooltips:[true,true],
+				pips: {mode: 'values', values: [0,90], density:100}
+			});
+
+			this.props.inc.slider.noUiSlider.on('update',function(values,handle){
+				var value = values[handle];
+				_wf.props.inc.value = value;
+				_wf.updateCurves(100);
+			});
+			this.props.inc.slider.querySelector('.noUi-value').addEventListener('click',function(e){
+				_wf.props.inc.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
 			});
 		}
 
@@ -519,10 +555,14 @@
 		return this;
 	}
 
-	function makePath(data,axes){
+	function makePath(data,axes,reverse){
 		var d = '';
 		if(axes.x.scale && axes.y.scale){
-			for(var i = 0; i < data.length; i++) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);
+			if(reverse){
+				for(var i = data.length-1; i >= 0; i--) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);			
+			}else{
+				for(var i = 0; i < data.length; i++) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);
+			}
 		}
 		return d;
 	}
