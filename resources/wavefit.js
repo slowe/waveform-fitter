@@ -464,7 +464,7 @@
 				start: this.props.inc.values,
 				connect: [false,true,false],
 				range: { 'min': this.props.inc.range[0], 'max': this.props.inc.range[1] },
-				tooltips:[{to:function(v){ return Math.round(v); }},{to:function(v){ return Math.round(v); }}],
+				tooltips:[{to:function(v){ return Math.round(v)+'&deg;' }},{to:function(v){ return Math.round(v)+'&deg;'; }}],
 				step: 1,
 				pips: {mode: 'values', values: [0,90], density:100}
 			});
