@@ -82,8 +82,12 @@
 				if(tgt){
 					els[i].setAttribute(tgt,txt);
 				}else{
-					if(els[i].ownerSVGElement) els[i].textContent = txt;
-					else els[i].innerHTML = txt;
+					if(els[i].ownerSVGElement){
+						//els[i].textContent = txt;
+						els[i].innerHTML = txt.replace(/\^\{([0-9]*)\}/,function(m,p1){ return '<tspan dy="-0.4em" font-size="0.7em">'+p1+'</tspan>'; });
+					}else{
+						els[i].innerHTML = txt.replace(/\^\{([0-9]*)\}/,function(m,p1){ return '<sup>'+p1+'</sup>'; });
+					}
 				}
 				els[i].setAttribute('lang',this.lang);
 			}

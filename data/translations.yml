@@ -65,8 +65,8 @@ text:
             cy: Amser (e)
 
         strain:
-            en: Strain x10^21
-            cy: Straen x10^21
+            en: Strain x10^{21}
+            cy: Straen x10^{21}
 
 data:
 
