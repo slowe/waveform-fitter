@@ -1,5 +1,5 @@
 /*
-	GW WaveForm Editor v2.0.1
+	GW WaveForm Editor v2.0.2
 */
 (function(root){
 
@@ -98,6 +98,41 @@
 			}
 			return(new WaveData(dout));
 		}
+	}
+
+	function defaultSpacing(mn,mx,n){
+
+		var dv,log10_dv,base,frac,options,distance,imin,tmin,i;
+
+		// Start off by finding the exact spacing
+		dv = (mx-mn)/n;
+
+		// In any given order of magnitude interval, we allow the spacing to be
+		// 1, 2, 5, or 10 (since all divide 10 evenly). We start off by finding the
+		// log of the spacing value, then splitting this into the integer and
+		// fractional part (note that for negative values, we consider the base to
+		// be the next value 'down' where down is more negative, so -3.6 would be
+		// split into -4 and 0.4).
+		log10_dv = Math.log10(dv);
+		base = Math.floor(log10_dv);
+		frac = log10_dv - base;
+
+		// We now want to check whether frac falls closest to 1, 2, 5, or 10 (in log
+		// space). There are more efficient ways of doing this but this is just for clarity.
+		options = [1,2,5,10];
+		distance = new Array(options.length);
+		imin = -1;
+		tmin = 1e100;
+		for(i = 0; i < options.length; i++){
+			distance[i] = Math.abs(frac - Math.log10(options[i]));
+			if(distance[i] < tmin){
+				tmin = distance[i];
+				imin = i;
+			}
+		}
+
+		// Now determine the actual spacing
+		return Math.pow(10,base)*options[imin];
 	}
 
 	function WaveFitter(opts){
@@ -384,6 +419,8 @@
 
 		if(!this.sim) this.sim = svgEl('path').appendTo(this.svg.data).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
 
+		if(this.data && this.axes.x) this.axes.x.setTickSpacing(defaultSpacing(this.data.trange[0],this.data.trange[1],8));
+
 		return this.updateCurves();
 	};
 
@@ -481,15 +518,22 @@
 			this.label = label;
 			this.label.appendTo(el);
 		}
-
-		this.setProps = function(p){
-			if(typeof p==="object") props = p;
-			else props = {};
-			this.key = props.key||"";
+		this.updateDP = function(){
 			var str = (props.ticks.spacing+"");
 			// Count decimal places
 			dp = 0;
 			if(str.match(".")) dp = str.split(".")[1].length;
+			return this;
+		}
+		this.setTickSpacing = function(s){
+			props.ticks.spacing = s;
+			return this.updateDP().updateTicks()
+		}
+		this.setProps = function(p){
+			if(typeof p==="object") props = p;
+			else props = {};
+			this.key = props.key||"";
+			return this.updateDP();
 			return this;
 		};
 		this.setScale = function(s){
