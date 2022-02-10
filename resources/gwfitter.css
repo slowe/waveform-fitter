@@ -93,7 +93,7 @@ body.with-overlay { overflow: hidden; }
 	width:100%;
 	position:relative;
 	display:grid;
-	grid-template-columns: repeat(3,1fr);
+	grid-template-columns: repeat(4,1fr);
 	grid-gap: 4em;
 	padding: 0 3em;
 }

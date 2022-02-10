@@ -82,3 +82,8 @@ data:
         en: Inclination (&deg;)
         cy: Inclination (&deg;)
 
+    massratio:
+        en: Mass ratio
+        cy: Mass ratio
+
+

@@ -106,25 +106,50 @@
 		this._opts = opts||{};
 		this.getUrlVars();
 		this.debug = (this.urlVars.debug) ? this.urlVars.debug : false;
-		this.holders = {'param':'','graph':''};
+		this.sliders = opts.sliders || null;
+		this.graphel = opts.graphholder || null;
 		this.scales = {};
 
-
 		// Set properties
-		this.props = {'mass':{'range':[20,100],'slider':null},'dist':{'range':[100,800],'slider':null},'inc':{'range':[0,90],'slider':null,'values':[30,60]}};
+		this.props = {
+			'mass':{
+				'range':[20,100]
+			},
+			'dist':{
+				'range':[100,800]
+			},
+			'inclination':{
+				'range':[0,90],
+				'values':[0,90],
+				'options':{
+					'start': [0,90],
+					'connect':[false,true,false],
+					'range': { 'min': 0, 'max': 90 },
+					'tooltips':[{to:function(v){ return Math.round(v)+'&deg;'; }},{to:function(v){ return Math.round(v)+'&deg;'; }}],
+					'step': 1,
+					'pips': {mode: 'values', values: [0,90], density:100}
+				}
+			},
+			'massratio': {
+				'range': [0.1,1],
+				'value': 1,
+				'options':{
+					'step': 0.1,
+					'tooltips':[{to:function(v){ return v.toFixed(1); }}],
+					'pips': {mode: 'values', values: [0.1,1], density:100,'format':{'to':function(v){ return v.toFixed(1); }}}
+				}
+			}
+		};
 		this.props.mass.value = this.props.mass.range[0] + Math.random()*(this.props.mass.range[1]-this.props.mass.range[0]);
 		this.props.dist.value = this.props.dist.range[0] + Math.random()*(this.props.dist.range[1]-this.props.dist.range[0]);
 
-		this.holders = {
-			'param': (opts.paramholder ? opts.paramholder : 'param-holder'),
-			'mass': (opts.mass),
-			'dist': (opts.dist),
-			'inclination': (opts.inclination),
-			'graph': (opts.graphholder ? opts.graphholder : 'graph-holder')
-		};
-
 		this.addSliders();
 		this.updateGraph();
+
+		if(this.urlVars.level!="advanced"){
+			if(this.sliders.inclination) this.sliders.inclination.style.display = "none";
+			if(this.sliders.massratio) this.sliders.massratio.style.display = "none";
+		}
 
 		// Attach the window event
 		var _wf = this;
@@ -251,7 +276,7 @@
 
 	WaveFitter.prototype.updateGraph = function(){
 		
-		var holder = document.getElementById(this.holders.graph);
+		var holder = this.graphel;
 		var tempsvg = null;
 
 		if(this.svg && this.svg.el){
@@ -266,8 +291,6 @@
 		this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
 
 		if(tempsvg) holder.appendChild(tempsvg);
-
-		var defs,cp,xaxis,yaxis,data;
 
 		if(!this.svg){
 
@@ -316,7 +339,7 @@
 			'ticks': {'spacing':0.5,'length':-this.scales.graphWidth},
 			'width': this.scales.graphWidth,
 			'height': this.scales.graphHeight
-		}
+		};
 		if(!this.svg.yaxis){
 			// Make y-axis
 			this.svg.yaxis = svgEl('g').appendTo(this.svg.el).addClass("y-axis axis").attr({'id':'y-axis-g'});
@@ -369,7 +392,7 @@
 		}
 		if(this.sim){
 			var d,thetamax,thetamin,inc;
-			inc = this.props.inc.slider.noUiSlider.get();
+			inc = this.props.inclination.slider.noUiSlider.get();
 			inc[0] = parseFloat(inc[0]);
 			inc[1] = parseFloat(inc[1]);
 			thetamin = inc[1]*Math.PI/180;
@@ -377,7 +400,7 @@
 			this.data.plotThetaMax = this.data.simThetaMax.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamin),2))),this.data.dataH.t);
 			this.data.plotThetaMin = this.data.simThetaMin.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamax),2))),this.data.dataH.t);
 			d = makePath(this.data.plotThetaMax.lineData,this.axes);
-			d += 'L'+makePath(this.data.plotThetaMin.lineData,this.axes,true).substr(1,);
+			d += 'L'+makePath(this.data.plotThetaMin.lineData,this.axes,true).substr(1);
 			this.sim.attr('d',d);
 		}
 		return this;
@@ -401,83 +424,42 @@
 		}
 		return this;
 	};
+	
+	WaveFitter.prototype.addSlider = function(s){
+		var _wf=this;
+		var options;
+		if(this.sliders[s]){
+			this.props[s].el = this.sliders[s].querySelector('.param-slider-outer');
+			if(!this.props[s].el.querySelector('.param-slider')){
+				this.props[s].slider = document.createElement('div');
+				this.props[s].slider.classList.add('param-slider');
+				this.props[s].slider.setAttribute('id',s+'-slider');
+				this.props[s].el.appendChild(this.props[s].slider);
+
+				options = this.props[s].options || {};
+				if(!options.start) options.start = this.props[s].value;
+				if(!options.connect) options.connect = true;
+				if(!options.range) options.range = { 'min': this.props[s].range[0], 'max': this.props[s].range[1] };
+				if(!options.tooltips) options.tooltips = [true];
+				if(!options.pips) options.pips = {mode: 'positions', values: [0,100], density:100};
+				console.log(s,options);
+				noUiSlider.create(this.props[s].slider, options);
+				this.props[s].slider.noUiSlider.on('update',function(values,handle){
+					var value = values[handle];
+					_wf.props[s].value = value;
+					_wf.updateCurves(0);
+				});
+				this.props[s].slider.querySelector('.noUi-value').addEventListener('click',function(e){
+					_wf.props[s].slider.noUiSlider.set(Number(this.getAttribute('data-value')));
+				});
+			}
+		}
+		return this;
+	};
 
 	WaveFitter.prototype.addSliders = function(){
-		var _wf=this;
-
-		this.props.mass.el = document.querySelector('#'+this.holders.mass+' .param-slider-outer');
-		if(!this.props.mass.el.querySelector('.param-slider')){
-			this.props.mass.slider = document.createElement('div');
-			this.props.mass.slider.classList.add('param-slider');
-			this.props.mass.slider.setAttribute('id','mass-slider');
-			this.props.mass.el.appendChild(this.props.mass.slider);
-
-			noUiSlider.create(this.props.mass.slider, {
-				start: [this.props.mass.value],
-				connect: true,
-				range: { 'min': this.props.mass.range[0], 'max': this.props.mass.range[1] },
-				tooltips:[true],
-				pips: {mode: 'positions', values: [0,100],density:100,},
-			});
-			this.props.mass.slider.noUiSlider.on('update',function(values,handle){
-				var value = values[handle];
-				_wf.props.mass.value = value;
-				_wf.updateCurves(0);
-			});
-			this.props.mass.slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				_wf.props.mass.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
-			});
-		}
-
-		this.props.dist.el = document.querySelector('#'+this.holders.dist+' .param-slider-outer');
-		if(!this.props.dist.el.querySelector('.param-slider')){
-			this.props.dist.slider = document.createElement('div');
-			this.props.dist.slider.classList.add('param-slider');
-			this.props.dist.slider.setAttribute('id','dist-slider');
-			this.props.dist.el.appendChild(this.props.dist.slider);
-
-			noUiSlider.create(this.props.dist.slider, {
-				start: [this.props.dist.value],
-				connect: true,
-				range: { 'min': this.props.dist.range[0], 'max': this.props.dist.range[1] },
-				tooltips:[true],
-				pips: {mode: 'positions', values: [0,100],density:100}
-			});
-			this.props.dist.slider.noUiSlider.on('update',function(values,handle){
-				var value = values[handle];
-				_wf.props.dist.value = value;
-				_wf.updateCurves(100);
-			});
-			this.props.dist.slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				_wf.props.dist.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
-			});
-		}
-
-		this.props.inc.el = document.querySelector('#'+this.holders.inclination+' .param-slider-outer');
-		if(!this.props.inc.el.querySelector('.param-slider')){
-			this.props.inc.slider = document.createElement('div');
-			this.props.inc.slider.classList.add('param-slider');
-			this.props.inc.slider.setAttribute('id','inc-slider');
-			this.props.inc.el.appendChild(this.props.inc.slider);
-
-			noUiSlider.create(this.props.inc.slider, {
-				start: this.props.inc.values,
-				connect: [false,true,false],
-				range: { 'min': this.props.inc.range[0], 'max': this.props.inc.range[1] },
-				tooltips:[{to:function(v){ return Math.round(v)+'&deg;' }},{to:function(v){ return Math.round(v)+'&deg;'; }}],
-				step: 1,
-				pips: {mode: 'values', values: [0,90], density:100}
-			});
-
-			this.props.inc.slider.noUiSlider.on('update',function(values,handle){
-				var value = values[handle];
-				_wf.props.inc.value = value;
-				_wf.updateCurves(100);
-			});
-			this.props.inc.slider.querySelector('.noUi-value').addEventListener('click',function(e){
-				_wf.props.inc.slider.noUiSlider.set(Number(this.getAttribute('data-value')));
-			});
-		}
+		
+		for(var s in this.props) this.addSlider(s);
 
 		return this;
 	};
@@ -517,7 +499,7 @@
 			return this;
 		};
 		this.updateTicks = function(){
-			var t,v,p2,ticks;
+			var t,v,p2,ticks,attr;
 			ticks = el._el.querySelectorAll('.tick');
 			for(t = 0; t < ticks.length; t++) ticks[t].parentNode.removeChild(ticks[t]);
 			for(v = this.scale.min ; v <= this.scale.max; v += props.ticks.spacing){
@@ -549,7 +531,7 @@
 			this.path.attr({'d':(props.dir=="left") ? 'M'+w+','+h+'H0.5V0.5H'+w : 'M0.5,-'+h+'V0.5H'+w+'.5V-'+h});
 			if(this.scale) this.updateTicks();
 			return this;
-		}
+		};
 
 		this.setProps(props).updateSize();
 		
@@ -558,11 +540,12 @@
 
 	function makePath(data,axes,reverse){
 		var d = '';
+		var i;
 		if(axes.x.scale && axes.y.scale){
 			if(reverse){
-				for(var i = data.length-1; i >= 0; i--) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);			
+				for(i = data.length-1; i >= 0; i--) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);			
 			}else{
-				for(var i = 0; i < data.length; i++) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);
+				for(i = 0; i < data.length; i++) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);
 			}
 		}
 		return d;

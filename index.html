@@ -45,6 +45,10 @@
 				<h2 data-translate="site.data.translations[data.inclination][post.lang]">Inclination (&deg;)</h2>
 				<div class="param-slider-outer"></div>
 			</div>
+			<div id="param-massratio" class="param-outer">
+				<h2 data-translate="site.data.translations[data.massratio][post.lang]">Mass ratio</h2>
+				<div class="param-slider-outer"></div>
+			</div>
 		</div>
 		<div id="fitter-holder">
 			<div id="graph-holder"><svg></svg></div>
@@ -72,11 +76,13 @@
 
 		// If we haven't created a WaveFitter we do that
 		wf = new WaveFitter({
-			"paramholder":"param-holder",
-			"mass": "param-mass",
-			"dist": "param-dist",
-			"inclination": "param-inclination",
-			"graphholder":"graph-holder",
+			"sliders": {
+				"mass": document.getElementById("param-mass"),
+				"dist": document.getElementById("param-dist"),
+				"inclination": document.getElementById("param-inclination"),
+				"massratio": document.getElementById("param-massratio"),
+			},
+			"graphholder":document.getElementById("graph-holder"),
 			"data": "data/dataHanford.csv",
 			"simulation": "data/NRsim.csv"
 		});
