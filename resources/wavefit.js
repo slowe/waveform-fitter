@@ -109,6 +109,8 @@
 		this.sliders = opts.sliders || null;
 		this.graphel = opts.graphholder || null;
 		this.scales = {};
+		if(this.urlVars.simulation) opts.simulation = this.urlVars.simulation;
+		if(this.urlVars.data) opts.data = this.urlVars.data;
 
 		// Set properties
 		this.props = {
