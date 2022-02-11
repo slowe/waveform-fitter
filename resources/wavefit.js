@@ -100,6 +100,17 @@
 		}
 	}
 
+	function errorMessage(msg,error){
+		console.error(msg,error);
+		el = document.getElementById('error-message');
+		if(!el){
+			el = document.createElement('div');
+			el.style = 'background:#FFBABA;color:#D8000C;padding:0.5em;position:fixed;bottom:0;left:0;right:0;text-align:center;';
+			document.body.appendChild(el);
+		}
+		el.innerHTML = '<span style="border-radius:100%;width:1em;height:1em;line-height:1em;margin-right:0.5em;display:inline-block;background:#D8000C;color:white;">&times;</span>'+msg;
+	}
+
 	function defaultSpacing(mn,mx,n){
 
 		var dv,log10_dv,base,frac,options,distance,imin,tmin,i;
@@ -219,7 +230,7 @@
 			_wf.wavedata.simNR = parseCSV(txt);
 			_wf.updateData();
 		}).catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
+			errorMessage('Unable to load the simulation "'+filesim+'"',error);
 		});
 
 		fetch(filedata).then(response => {
@@ -230,7 +241,7 @@
 			_wf.wavedata.dataH = parseCSV(txt);
 			_wf.updateData();
 		}).catch(error => {
-			console.error('There has been a problem with your fetch operation:', error);
+			errorMessage('Unable to load the data "'+filedata+'"',error);
 		});
 		return this;
 	};
