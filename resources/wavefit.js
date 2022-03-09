@@ -187,7 +187,10 @@
 				'options':{
 					'step': 0.1,
 					'tooltips':[{to:function(v){ return v.toFixed(1); }}],
-					'pips': {mode: 'values', values: [0.1,1], density:100,'format':{'to':function(v){ return v.toFixed(1); }}}
+					'pips': {mode: 'values', values: [0.1,1], density:100,'format':{'to':function(v){ return v.toFixed(1); }}},
+					'onupdate': function(e,test){
+						this.loadSim(opts.simulation);
+					}
 				}
 			}
 		};
@@ -209,7 +212,7 @@
 		document.getElementById('about-button').addEventListener('click',function(){ showAbout(); });
 		document.getElementById('about-close').addEventListener('click',function(){ hideAbout(); });
 
-		if(!this.wavedata && opts.data && opts.simulation) this.loadData(opts.data,opts.simulation);
+		if(!this.wavedata && opts.data && opts.simulation) this.load(opts.data,opts.simulation);
 
 		return this;
 	}
@@ -219,35 +222,46 @@
 		return this;
 	};
 
-	WaveFitter.prototype.loadData = function(filedata,filesim){
-		console.info('Loading data from '+filedata+' and '+filesim);
-		
+	WaveFitter.prototype.load = function(filedata,filesim){		
 		this.wavedata = {'dataH':null,'simNR':null};
-		var _wf = this;
 
-		fetch(filesim).then(response => {
-			if(!response.ok) throw new Error('Network response was not OK');
-			return response.text();
-		}).then(txt => {
-			console.info('Loaded simNR');
-			_wf.wavedata.simNR = parseCSV(txt);
-			_wf.updateData();
-		}).catch(error => {
-			errorMessage('Unable to load the simulation "'+filesim+'"',error);
-		});
+		this.loadData(filedata);
+		this.loadSim(filesim);
 
-		fetch(filedata).then(response => {
+		return this;
+	};
+
+	WaveFitter.prototype.loadData = function(file){
+		console.info('Loading data from '+file);
+		fetch(file).then(response => {
 			if(!response.ok) throw new Error('Network response was not OK');
 			return response.text();
 		}).then(txt => {
 			console.info('Loaded dataH');
-			_wf.wavedata.dataH = parseCSV(txt);
-			_wf.updateData();
+			this.wavedata.dataH = parseCSV(txt);
+			this.updateData();
 		}).catch(error => {
 			errorMessage('Unable to load the data "'+filedata+'"',error);
 		});
 		return this;
-	};
+	}
+
+	WaveFitter.prototype.loadSim = function(file){
+		file = file.replace(/\{MASSRATIO\}/,this.props.massratio.value.toFixed(1))
+		console.info('Loading data from '+file);
+		fetch(file).then(response => {
+			if(!response.ok) throw new Error('Network response was not OK');
+			return response.text();
+		}).then(txt => {
+			console.info('Loaded simNR');
+			this.wavedata.simNR = parseCSV(txt);
+			this.updateData();
+		}).catch(error => {
+			errorMessage('Unable to load the simulation "'+filesim+'"',error);
+		});
+		return this;
+	}
+
 
 	WaveFitter.prototype.setLanguage = function(lang){
 
@@ -502,7 +516,8 @@
 				this.props[s].slider.noUiSlider.on('update',function(values,handle){
 					var value = parseFloat(values[handle]);
 					_wf.props[s].value = value;
-					_wf.updateCurves(0);
+					if(_wf.props[s].options && typeof _wf.props[s].options.onupdate==="function") _wf.props[s].options.onupdate.call(_wf,s,this);
+					else _wf.updateCurves(0);
 				});
 				this.props[s].slider.querySelector('.noUi-value').addEventListener('click',function(e){
 					_wf.props[s].slider.noUiSlider.set(Number(this.getAttribute('data-value')));
