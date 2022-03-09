@@ -23,11 +23,11 @@
 	class WaveData{
 		constructor(datain){
 			if(Array.isArray(datain)){
-				if((datain.length>0)&(datain[0].length>=2)){
+				if((datain.length>0) && (datain[0].length>=2)){
 					this.t=datain.map(function(value,index){return value[0];});
 					this.h=datain.map(function(value,index){return value[1];});
 				}else{
-					console.log("datain needs to be 2D array with dimension Nx2 for N datapoints",datain.length,datain[0].length);
+					console.error("datain needs to be 2D array with dimension Nx2 for N datapoints",datain);
 					return(null);
 				}
 			}else{
@@ -35,7 +35,7 @@
 					this.t = datain.t;
 					this.h = datain.h;
 				}else{
-					console.log("datain needs to be 2D array or object with data in properties t and h");
+					console.error("datain needs to be 2D array or object with data in properties t and h");
 					return(null);
 				}
 			}
@@ -84,18 +84,21 @@
 			this.scale(mass,dist);
 		}
 		scale(m,d,tout){
+			if(typeof m==="string") m = parseFloat(m);
+			if(typeof m==="string") d = parseFloat(d);
 			this.mass=m;
 			this.dist=d;
 			if (!tout){
 				tout=this.t;
 			}
 			var dout=[];
-      var tScale,hout,i;
+			var tScale,hout,i;
 			for(i = 0 ; i < tout.length ; i++){
 				tScale=(tout[i]-this.t0)*this.M0/m + this.t0;
 				hout=this.getH(tScale)*(m/this.M0)*(this.D0/d);
-				if(!Number.isNaN(hout)){dout.push([tout[i],hout]);}
+				if(!Number.isNaN(hout)) dout.push([tout[i],hout]);
 			}
+			if(dout.length == 0) console.error('ScaleableWaveData could not find any existing heights');
 			return(new WaveData(dout));
 		}
 	}
@@ -306,10 +309,10 @@
 
 	WaveFitter.prototype.updateData = function(){
 
-		if(this.wavedata.dataH && this.wavedata.simNR){	
+		if(this.wavedata.dataH && this.wavedata.simNR){
 
 			this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR), simThetaMax: new ScaleableWaveData(this.wavedata.simNR), simThetaMin: new ScaleableWaveData(this.wavedata.simNR) };
-			
+
 			this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
 			this.data.hrange = [-2,2];
 
@@ -425,10 +428,10 @@
 
 	WaveFitter.prototype.drawData = function(){
 
-		if(!this.line) this.line = svgEl('path').appendTo(this.svg.data).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none'});
+		if(typeof this.line==="undefined") this.line = svgEl('path').appendTo(this.svg.data).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none'});
 		if(this.data && this.data.dataH) this.line.attr({'d':makePath(this.data.dataH.lineData,this.axes)});
 
-		if(!this.sim) this.sim = svgEl('path').appendTo(this.svg.data).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
+		if(typeof this.sim==="undefined") this.sim = svgEl('path').appendTo(this.svg.data).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
 
 		if(this.data && this.axes.x) this.axes.x.setTickSpacing(defaultSpacing(this.data.trange[0],this.data.trange[1],8));
 
@@ -440,6 +443,7 @@
 			console.warn('No data loaded yet');
 			return this;
 		}
+
 		if(this.sim){
 			var d,thetamax,thetamin,inc;
 			inc = this.props.inclination.slider.noUiSlider.get();
@@ -447,8 +451,10 @@
 			inc[1] = parseFloat(inc[1]);
 			thetamin = inc[1]*Math.PI/180;
 			thetamax = inc[0]*Math.PI/180;
+
 			this.data.plotThetaMax = this.data.simThetaMax.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamin),2))),this.data.dataH.t);
 			this.data.plotThetaMin = this.data.simThetaMin.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamax),2))),this.data.dataH.t);
+
 			d = makePath(this.data.plotThetaMax.lineData,this.axes);
 			d += 'L'+makePath(this.data.plotThetaMin.lineData,this.axes,true).substr(1);
 			this.sim.attr('d',d);
@@ -492,10 +498,9 @@
 				if(!options.range) options.range = { 'min': this.props[s].range[0], 'max': this.props[s].range[1] };
 				if(!options.tooltips) options.tooltips = [true];
 				if(!options.pips) options.pips = {mode: 'positions', values: [0,100], density:100};
-				console.log(s,options);
 				noUiSlider.create(this.props[s].slider, options);
 				this.props[s].slider.noUiSlider.on('update',function(values,handle){
-					var value = values[handle];
+					var value = parseFloat(values[handle]);
 					_wf.props[s].value = value;
 					_wf.updateCurves(0);
 				});
@@ -530,10 +535,12 @@
 			this.label.appendTo(el);
 		}
 		this.updateDP = function(){
-			var str = (props.ticks.spacing+"");
-			// Count decimal places
 			dp = 0;
-			if(str.match(".")) dp = str.split(".")[1].length;
+			if(typeof props.ticks.spacing==="number"){
+				var str = ((props.ticks.spacing||"")+"");
+				// Count decimal places
+				if(str.match(".")) dp = str.split(".")[1].length;
+			}
 			return this;
 		}
 		this.setTickSpacing = function(s){
@@ -633,9 +640,11 @@
 		var rows = [];
 		var r,i,c;
 		for(i = 1; i < lines.length; i++){
-			rows.push(lines[i].split(/,/g));
-			r = rows.length-1;
-			for(c = 0; c < rows[r].length; c++) rows[r][c] = parseFloat(rows[r][c]);
+			if(lines[i] != ""){
+				rows.push(lines[i].split(/,/g));
+				r = rows.length-1;
+				for(c = 0; c < rows[r].length; c++) rows[r][c] = parseFloat(rows[r][c]);
+			}
 		}
 		return rows;
 	}
@@ -652,6 +661,7 @@
 	}
 
 	function clone(el){
+		if(typeof el==="undefined") return {};
 		return JSON.parse(JSON.stringify(el));
 	}
 
