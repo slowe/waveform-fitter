@@ -1,6 +1,6 @@
 /*
 	Language Updater - updates Liquid/Jekyll style variables
-	Version 0.1
+	Version 0.2
 */
 (function(root){
 	
@@ -16,6 +16,8 @@
 
 		this.lang = (navigator ? (navigator.userLanguage||navigator.systemLanguage||navigator.language||browser.language) : "en");
 		var _obj = this;
+		var p = /.*[\?\&]lang=([^\&]+).*$/;
+		if(location.search.match(p)) this.lang = location.search.replace(p,function(m,p1){ return p1; });
 
 		function init(){
 			console.info('Lang.getLanguages');
@@ -63,8 +65,7 @@
 		this.setLanguage = function(lang){
 			this.lang = lang||this.lang;
 			console.info('Lang.setLanguage',lang);
-			var post = {'lang':lang};
-			var site = {'data':{'translations':this.translations}};
+			var site = {'translations':this.translations,'lang':lang}
 			var els = document.querySelectorAll('[data-translate]');
 			for(var i = 0; i < els.length; i++){
 				txt = els[i].getAttribute('data-translate');

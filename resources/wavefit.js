@@ -392,7 +392,7 @@
 		if(!this.svg.xaxis){
 			// Make x-axis
 			this.svg.xaxis = svgEl('g').appendTo(this.svg.el).addClass("x-axis axis").attr({'id':'x-axis-g'});
-			this.axes.x = new Axis(this.svg.xaxis,xprops,svgEl('text').addClass("x-axis axis-label translate").attr({'dominant-baseline':'hanging','text-anchor':'middle','data-translate':'site.data.translations[text.axis.time][post.lang]'}).html(this.getTl('text.axis.time')));
+			this.axes.x = new Axis(this.svg.xaxis,xprops,svgEl('text').addClass("x-axis axis-label translate").attr({'dominant-baseline':'hanging','text-anchor':'middle','data-translate':'site.translations[text.axis.time][site.lang]'}).html(this.getTl('text.axis.time')));
 		}else{
 			this.axes.x.setDomain(0,this.scales.graphWidth).setProps(xprops).updateSize();
 		}
@@ -408,7 +408,7 @@
 		if(!this.svg.yaxis){
 			// Make y-axis
 			this.svg.yaxis = svgEl('g').appendTo(this.svg.el).addClass("y-axis axis").attr({'id':'y-axis-g'});
-			this.axes.y = new Axis(this.svg.yaxis,yprops,svgEl('text').addClass("y-axis axis-label translate").attr({'dominant-baseline':'hanging','transform':'rotate(-90)','text-anchor':'middle','data-translate':'site.data.translations[text.axis.strain][post.lang]'}).html(this.getTl('text.axis.strain')));
+			this.axes.y = new Axis(this.svg.yaxis,yprops,svgEl('text').addClass("y-axis axis-label translate").attr({'dominant-baseline':'hanging','transform':'rotate(-90)','text-anchor':'middle','data-translate':'site.translations[text.axis.strain][site.lang]'}).html(this.getTl('text.axis.strain')));
 		}else{
 			this.axes.y.setDomain(this.scales.graphHeight,0).setProps(yprops).updateSize();
 		}
@@ -429,9 +429,9 @@
 			this.svg.legend = svgEl('g').appendTo(this.svg.el).addClass('legend');
 			this.svg.items = {};
 			this.svg.items.dataline = svgEl('line').appendTo(this.svg.legend).addClass('line data').attr({'x1':0,'x2':(50).toFixed(1),'y1':0,'y2':0});
-			this.svg.items.datatext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text data translate').attr({'x':(50 + 10).toFixed(1),'y':0,'data-translate':'site.data.translations[text.legend.data][post.lang]'}).html(this.getTl('text.legend.data'));
+			this.svg.items.datatext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text data translate').attr({'x':(50 + 10).toFixed(1),'y':0,'data-translate':'site.translations[text.legend.data][site.lang]'}).html(this.getTl('text.legend.data'));
 			this.svg.items.simline = svgEl('line').appendTo(this.svg.legend).addClass('line sim').attr({'x1':0,'x2':(50).toFixed(1),'y1':30,'y2':30});
-			this.svg.items.simtext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text sim translate').attr({'x':(50 + 10).toFixed(1),'y':30,'data-translate':'site.data.translations[text.legend.simulation][post.lang]'}).html(this.getTl('text.legend.simulation'));
+			this.svg.items.simtext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text sim translate').attr({'x':(50 + 10).toFixed(1),'y':30,'data-translate':'site.translations[text.legend.simulation][site.lang]'}).html(this.getTl('text.legend.simulation'));
 		}
 		// Update legend position
 		this.svg.legend.attr('transform',"translate("+(this.scales.svgMargin.left+10)+"," + (this.scales.svgMargin.top+20) + ")");
