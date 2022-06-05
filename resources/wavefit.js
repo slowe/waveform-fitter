@@ -98,7 +98,10 @@
 				hout=this.getH(tScale)*(m/this.M0)*(this.D0/d);
 				if(!Number.isNaN(hout)) dout.push([tout[i],hout]);
 			}
-			if(dout.length == 0) console.error('ScaleableWaveData could not find any existing heights');
+			if(dout.length == 0){
+				console.warn('ScaleableWaveData has no height in the graph range.');
+				for(i = 0 ; i < tout.length ; i++) dout.push([tout[i],0]);
+			}
 			return(new WaveData(dout));
 		}
 	}
@@ -241,7 +244,7 @@
 			this.wavedata.dataH = parseCSV(txt);
 			this.updateData();
 		}).catch(error => {
-			errorMessage('Unable to load the data "'+filedata+'"',error);
+			errorMessage('Unable to load the data "'+file+'"',error);
 		});
 		return this;
 	}
