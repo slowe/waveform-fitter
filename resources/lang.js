@@ -1,6 +1,6 @@
 /*
 	Language Updater - updates Liquid/Jekyll style variables
-	Version 0.2
+	Version 0.3
 */
 (function(root){
 	
@@ -21,7 +21,7 @@
 
 		function init(){
 			console.info('Lang.getLanguages');
-			fetch("data/languages.yml").then(response => {
+			fetch(opt.dir+"languages.yml").then(response => {
 				if(!response.ok) throw new Error('Network response was not OK');
 				return response.text();
 			}).then(txt => {
@@ -50,7 +50,7 @@
 		};
 		this.getLanguageData = function(){
 			console.info('Lang.getLanguageData');
-			fetch("data/translations.yml").then(response => {
+			fetch(opt.dir+"translations.yml").then(response => {
 				if(!response.ok) throw new Error('Network response was not OK');
 				return response.text();
 			}).then(txt => {
