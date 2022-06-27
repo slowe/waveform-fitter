@@ -114,7 +114,7 @@ body.with-overlay { overflow: hidden; }
 .noUi-connect { background: white; opacity: 0.7; }
 .noUi-target { border: 0px; box-shadow: none; }
 .noUi-base, .noUi-handle, .noUi-value { cursor:pointer; }
-.noUi-pips-horizontal{ padding-top: 0; }
+.noUi-pips-horizontal{ padding-top: 0; height: 0; }
 .noUi-target, .noUi-connects { border-radius: 0; border-top-left-radius: 4px; border-top-right-radius: 4px; }
 .noUi-marker-horizontal.noUi-marker { margin-left: -2px; }
 .noUi-marker-horizontal.noUi-marker:first-child { margin-left: 0; }

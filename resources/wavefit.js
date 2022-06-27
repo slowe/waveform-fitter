@@ -1,5 +1,5 @@
 /*
-	GW WaveForm Editor v2.0.2
+	GW WaveForm Viewer
 */
 (function(root){
 
@@ -10,105 +10,9 @@
 			else document.addEventListener('DOMContentLoaded', fn);
 		};
 	}
-	function Range(min,max){
-		this.min = min;
-		this.max = max;
-		this.range = max-min;
-		this.frac = function(t){ return (t-this.min)/this.range; };
-		this.valueFromFrac = function(f){ return this.min + f*this.range; };
-		this.domain = function(mn,mx){ this._domain = new Range(mn,mx); return this; };
-		this.value = function(v){ return (this._domain||this).valueFromFrac(this.frac(v)); };
-		return this;
-	}
-	class WaveData{
-		constructor(datain){
-			if(Array.isArray(datain)){
-				if((datain.length>0) && (datain[0].length>=2)){
-					this.t=datain.map(function(value,index){return value[0];});
-					this.h=datain.map(function(value,index){return value[1];});
-				}else{
-					console.error("datain needs to be 2D array with dimension Nx2 for N datapoints",datain);
-					return(null);
-				}
-			}else{
-				if(datain.hasOwnProperty('t')&datain.hasOwnProperty('t')){
-					this.t = datain.t;
-					this.h = datain.h;
-				}else{
-					console.error("datain needs to be 2D array or object with data in properties t and h");
-					return(null);
-				}
-			}
-			this.linedata();
-		}
-		linedata(){
-			this.lineData = [];
-			for(var i = 0 ; i < this.t.length ; i++) this.lineData.push({'t':this.t[i],'h':this.h[i]});
-			// Set the range of the data
-			this.data = new Range(this.t[0], this.t[this.t.length-1]);
-			this.data.domain(0,this.t.length);
-			// Set the range of the indices
-		}
-		getH(t){
-			var h0,i,i0,i1,di;
-			if(Array.isArray(t)){
-				h0 = [];
-				for(i = 0 ; i < t.length ; i++) h0.push(this.getH(t[i]));
-			}else{
-				var idx = this.data.value(t);
-				if(idx < 0){
-					h0 = NaN;
-				}else if(idx > this.t.length-1){
-					h0 = 0;
-				}else{
-					i0 = Math.floor(idx), i1 = Math.ceil(idx), di = idx%1;
-					h0 = (1-di)*this.h[i0] + di*this.h[i1];
-				}
-			}
-			return h0;
-		}
-		shiftt(t0){
-			for(var i = 0 ; i < this.t.length; i++) this.t[i] += t0;
-			this.linedata();
-		}
-	}
-
-	class ScaleableWaveData extends WaveData{
-		constructor(datain,mass=65,dist=420){
-			super(datain);
-			this.t0 = 0.423;
-			this.M0 = 65;
-			this.D0 = 420;
-			this.mass = (mass) ? mass : 65;
-			this.dist = (dist) ? dist : 420;
-			this.scale(mass,dist);
-		}
-		scale(m,d,tout){
-			if(typeof m==="string") m = parseFloat(m);
-			if(typeof m==="string") d = parseFloat(d);
-			this.mass=m;
-			this.dist=d;
-			if (!tout){
-				tout=this.t;
-			}
-			var dout=[];
-			var tScale,hout,i;
-			for(i = 0 ; i < tout.length ; i++){
-				tScale=(tout[i]-this.t0)*this.M0/m + this.t0;
-				hout=this.getH(tScale)*(m/this.M0)*(this.D0/d);
-				if(!Number.isNaN(hout)) dout.push([tout[i],hout]);
-			}
-			if(dout.length == 0){
-				console.warn('ScaleableWaveData has no height in the graph range.');
-				for(i = 0 ; i < tout.length ; i++) dout.push([tout[i],0]);
-			}
-			return(new WaveData(dout));
-		}
-	}
-
 	function errorMessage(msg,error){
 		console.error(msg,error);
-		el = document.getElementById('error-message');
+		var el = document.getElementById('error-message');
 		if(!el){
 			el = document.createElement('div');
 			el.style = 'background:#FFBABA;color:#D8000C;padding:0.5em;position:fixed;bottom:0;left:0;right:0;text-align:center;';
@@ -117,49 +21,16 @@
 		el.innerHTML = '<span style="border-radius:100%;width:1em;height:1em;line-height:1em;margin-right:0.5em;display:inline-block;background:#D8000C;color:white;">&times;</span>'+msg;
 	}
 
-	function defaultSpacing(mn,mx,n){
-
-		var dv,log10_dv,base,frac,options,distance,imin,tmin,i;
-
-		// Start off by finding the exact spacing
-		dv = (mx-mn)/n;
-
-		// In any given order of magnitude interval, we allow the spacing to be
-		// 1, 2, 5, or 10 (since all divide 10 evenly). We start off by finding the
-		// log of the spacing value, then splitting this into the integer and
-		// fractional part (note that for negative values, we consider the base to
-		// be the next value 'down' where down is more negative, so -3.6 would be
-		// split into -4 and 0.4).
-		log10_dv = Math.log10(dv);
-		base = Math.floor(log10_dv);
-		frac = log10_dv - base;
-
-		// We now want to check whether frac falls closest to 1, 2, 5, or 10 (in log
-		// space). There are more efficient ways of doing this but this is just for clarity.
-		options = [1,2,5,10];
-		distance = new Array(options.length);
-		imin = -1;
-		tmin = 1e100;
-		for(i = 0; i < options.length; i++){
-			distance[i] = Math.abs(frac - Math.log10(options[i]));
-			if(distance[i] < tmin){
-				tmin = distance[i];
-				imin = i;
-			}
-		}
-
-		// Now determine the actual spacing
-		return Math.pow(10,base)*options[imin];
-	}
-
 	function WaveFitter(opts){
 
-		console.info('WaveFitter');
+		this.version = "2.1.0";
+		console.info('WaveFitter '+this.version);
 		this._opts = opts||{};
 		this.getUrlVars();
 		this.debug = (this.urlVars.debug) ? this.urlVars.debug : false;
 		this.sliders = opts.sliders || null;
-		this.graphel = opts.graphholder || null;
+		var _obj = this;
+		this.graph = new Graph(opts.graphholder,{'getText':function(txt){ return _obj.getTl(txt); }});
 		this.scales = {};
 		if(this.urlVars.simulation) opts.simulation = this.urlVars.simulation;
 		if(this.urlVars.data) opts.data = this.urlVars.data;
@@ -201,7 +72,7 @@
 		this.props.dist.value = this.props.dist.range[0] + Math.random()*(this.props.dist.range[1]-this.props.dist.range[0]);
 
 		this.addSliders();
-		this.updateGraph();
+		this.graph.update();
 
 		if(this.urlVars.level!="advanced"){
 			if(this.sliders.inclination) this.sliders.inclination.style.display = "none";
@@ -221,7 +92,9 @@
 	}
 	
 	WaveFitter.prototype.resize = function(){
-		this.updateGraph();
+		this.graph.update();
+		this.updateCurves();
+
 		return this;
 	};
 
@@ -247,10 +120,10 @@
 			errorMessage('Unable to load the data "'+file+'"',error);
 		});
 		return this;
-	}
+	};
 
 	WaveFitter.prototype.loadSim = function(file){
-		file = file.replace(/\{MASSRATIO\}/,this.props.massratio.value.toFixed(1))
+		file = file.replace(/\{MASSRATIO\}/,this.props.massratio.value.toFixed(1));
 		console.info('Loading data from '+file);
 		fetch(file).then(response => {
 			if(!response.ok) throw new Error('Network response was not OK');
@@ -260,11 +133,10 @@
 			this.wavedata.simNR = parseCSV(txt);
 			this.updateData();
 		}).catch(error => {
-			errorMessage('Unable to load the simulation "'+filesim+'"',error);
+			errorMessage('Unable to load the simulation "'+file+'"',error);
 		});
 		return this;
-	}
-
+	};
 
 	WaveFitter.prototype.setLanguage = function(lang){
 
@@ -326,155 +198,70 @@
 
 	WaveFitter.prototype.updateData = function(){
 
-		if(this.wavedata.dataH && this.wavedata.simNR){
-
-			this.data = {dataH: new WaveData(this.wavedata.dataH), simNR: new ScaleableWaveData(this.wavedata.simNR), simThetaMax: new ScaleableWaveData(this.wavedata.simNR), simThetaMin: new ScaleableWaveData(this.wavedata.simNR) };
-
-			this.data.trange = [this.data.dataH.t[0], this.data.dataH.t[this.data.dataH.t.length-1]];
-			this.data.hrange = [-2,2];
-
-			if(this.axes.x) this.axes.x.setScale((new Range(this.data.trange[0],this.data.trange[1])).domain(0, this.scales.graphWidth));
-			if(this.axes.y) this.axes.y.setScale((new Range(this.data.hrange[0],this.data.hrange[1])).domain(this.scales.graphHeight, 0));
-
-			this.drawData();
+		// Set the data series
+		if(this.wavedata.dataH!==null && !this.graph.series[0]){
+			this.graph.setSeries(0,this.wavedata.dataH,{'id':'line-data','text':'text.legend.data','class':'data','stroke':'rgba(0,150,200,1)'});
+			// Update the ranges
+			this.graph.axes.x.setRange(this.graph.series[0]);
 		}
+		if(this.wavedata.simNR!==null){
+			this.graph.setSeries(1,this.wavedata.simNR,{
+				'id':'line-sim',
+				'text':'text.legend.simulation',
+				'class':'sim',
+				'range':true,
+				'stroke':'rgba(200,150,0,1)',
+				'fill':'rgba(200,150,0,1)',
+				'scale': function(t,m,d){
+					var tScale = (t-this.t0)*this.M0/m + this.t0;
+					return this.getH(tScale)*(m/this.M0)*(this.D0/d);
+				},
+				'scaleLine': function(m,d,tout){
+					if(typeof m==="string") m = parseFloat(m);
+					if(typeof m==="string") d = parseFloat(d);
+					this.mass=m;
+					this.dist=d;
+					if(!tout) tout = this.t;
+					// Create a new lineData array using the times provided
+					this.lineData = [];
+					for(var i = 0 ; i < tout.length ; i++) this.lineData[i] = {'t':tout[i],'h':this.scale(tout[i],m,d)};
+					return;
+				}
+			});
+		}
+
+		this.graph.axes.y.setRange(-2,2);
+
+		// Update the scales and domains
+		this.graph.updateData();
+
+		// Draw the data
+		this.graph.drawData();
+		this.updateCurves();
+
+		this.graph.update();
 
 		return this;
-	};
-
-	WaveFitter.prototype.updateGraph = function(){
-		
-		var holder = this.graphel;
-		var tempsvg = null;
-
-		if(this.svg && this.svg.el){
-			// Remove the element so we can work out the size of the container
-			tempsvg = holder.removeChild(this.svg.el);
-		}
-
-		this.scales.svgWidth = Math.floor(holder.offsetWidth);
-		this.scales.svgHeight = holder.offsetHeight||Math.floor(this.scales.svgWidth/2);
-		this.scales.svgMargin = {'left':75,'right':18,'top':10,'bottom':60};
-		this.scales.graphWidth = this.scales.svgWidth-this.scales.svgMargin.left-this.scales.svgMargin.right;
-		this.scales.graphHeight = this.scales.svgHeight-this.scales.svgMargin.top-this.scales.svgMargin.bottom;
-
-		if(tempsvg) holder.appendChild(tempsvg);
-
-		if(!this.svg){
-
-			this.svg = {};
-			this.svg.el = holder.querySelector('svg');
-			this.svg.el.classList.add('graph');
-		}
-		
-		this.svg.el.setAttribute('width',(this.scales.svgWidth));
-		this.svg.el.setAttribute('height',(this.scales.svgHeight));
-		
-		if(!this.svg.defs){
-			this.svg.defs = svgEl('defs').appendTo(this.svg.el);
-		}
-
-		if(!this.svg.clip){
-			this.svg.clip = svgEl('clipPath');
-			this.svg.clip.appendTo(this.svg.defs).attr('id','clip');
-			this.svg.cliprect = svgEl('rect').appendTo(this.svg.clip).attr({'x':0,'y':0});
-		}
-
-		this.svg.cliprect.attr({'width':this.scales.graphWidth,'height':this.scales.graphHeight});
-
-
-		// Create axes
-		if(!this.axes) this.axes = {};
-		var xprops = {
-			'key': 't',
-			'dir': 'bottom',
-			'ticks': {'spacing':0.02,'length':-this.scales.graphHeight},
-			'width': this.scales.graphWidth,
-			'height': this.scales.graphHeight
-		};
-		if(!this.svg.xaxis){
-			// Make x-axis
-			this.svg.xaxis = svgEl('g').appendTo(this.svg.el).addClass("x-axis axis").attr({'id':'x-axis-g'});
-			this.axes.x = new Axis(this.svg.xaxis,xprops,svgEl('text').addClass("x-axis axis-label translate").attr({'dominant-baseline':'hanging','text-anchor':'middle','data-translate':'site.translations[text.axis.time][site.lang]'}).html(this.getTl('text.axis.time')));
-		}else{
-			this.axes.x.setDomain(0,this.scales.graphWidth).setProps(xprops).updateSize();
-		}
-		this.svg.xaxis.attr({'transform': "translate("+this.scales.svgMargin.left+"," + (this.scales.graphHeight + this.scales.svgMargin.top) + ")"});
-		if(this.axes.x.label) this.axes.x.label.attr({'x':this.scales.graphWidth/2,'y':(this.scales.svgMargin.bottom-(this.scales.svgMargin.left/4)-5)+"px","font-size":(this.scales.svgMargin.left/4)+"px"});
-		var yprops = {
-			'key': 'h',
-			'dir': 'left',
-			'ticks': {'spacing':0.5,'length':-this.scales.graphWidth},
-			'width': this.scales.graphWidth,
-			'height': this.scales.graphHeight
-		};
-		if(!this.svg.yaxis){
-			// Make y-axis
-			this.svg.yaxis = svgEl('g').appendTo(this.svg.el).addClass("y-axis axis").attr({'id':'y-axis-g'});
-			this.axes.y = new Axis(this.svg.yaxis,yprops,svgEl('text').addClass("y-axis axis-label translate").attr({'dominant-baseline':'hanging','transform':'rotate(-90)','text-anchor':'middle','data-translate':'site.translations[text.axis.strain][site.lang]'}).html(this.getTl('text.axis.strain')));
-		}else{
-			this.axes.y.setDomain(this.scales.graphHeight,0).setProps(yprops).updateSize();
-		}
-		this.svg.yaxis.attr({'transform': "translate("+this.scales.svgMargin.left+"," + this.scales.svgMargin.top + ")"});
-		if(this.axes.y.label) this.axes.y.label.attr({'x':-this.scales.graphHeight/2,'y':(-this.scales.svgMargin.left*0.95 + 5)+'px',"font-size":(this.scales.svgMargin.left/4)+"px"});
-
-
-
-		// Make data
-		if(!this.svg.data){
-			this.svg.data = svgEl("g").appendTo(this.svg.el).attr({"id":"data-g",'clip-path':'url(#clip)'});
-		}
-		this.svg.data.attr({"transform":"translate("+this.scales.svgMargin.left+","+(this.scales.svgMargin.top) + ")"});
-		this.drawData();
-
-		// Make legend
-		if(!this.svg.legend){
-			this.svg.legend = svgEl('g').appendTo(this.svg.el).addClass('legend');
-			this.svg.items = {};
-			this.svg.items.dataline = svgEl('line').appendTo(this.svg.legend).addClass('line data').attr({'x1':0,'x2':(50).toFixed(1),'y1':0,'y2':0});
-			this.svg.items.datatext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text data translate').attr({'x':(50 + 10).toFixed(1),'y':0,'data-translate':'site.translations[text.legend.data][site.lang]'}).html(this.getTl('text.legend.data'));
-			this.svg.items.simline = svgEl('line').appendTo(this.svg.legend).addClass('line sim').attr({'x1':0,'x2':(50).toFixed(1),'y1':30,'y2':30});
-			this.svg.items.simtext = svgEl('text').appendTo(this.svg.legend).addClass('leg-text sim translate').attr({'x':(50 + 10).toFixed(1),'y':30,'data-translate':'site.translations[text.legend.simulation][site.lang]'}).html(this.getTl('text.legend.simulation'));
-		}
-		// Update legend position
-		this.svg.legend.attr('transform',"translate("+(this.scales.svgMargin.left+10)+"," + (this.scales.svgMargin.top+20) + ")");
-
-
-		return this;
-	};
-
-	WaveFitter.prototype.drawData = function(){
-
-		if(typeof this.line==="undefined") this.line = svgEl('path').appendTo(this.svg.data).addClass('line data').attr({'id':'line-data','stroke-width':2,'fill':'none'});
-		if(this.data && this.data.dataH) this.line.attr({'d':makePath(this.data.dataH.lineData,this.axes)});
-
-		if(typeof this.sim==="undefined") this.sim = svgEl('path').appendTo(this.svg.data).addClass('line sim').attr({'id':'line-data','stroke-width':2,'fill':'none'});
-
-		if(this.data && this.axes.x) this.axes.x.setTickSpacing(defaultSpacing(this.data.trange[0],this.data.trange[1],8));
-
-		return this.updateCurves();
 	};
 
 	WaveFitter.prototype.updateCurves = function(dur=0){
-		if(!this.data){
+
+		if(!this.graph.series[0]){
 			console.warn('No data loaded yet');
 			return this;
 		}
 
-		if(this.sim){
-			var d,thetamax,thetamin,inc;
+		if(this.graph.series[1]){
+			var thetamax,thetamin,inc;
 			inc = this.props.inclination.slider.noUiSlider.get();
 			inc[0] = parseFloat(inc[0]);
 			inc[1] = parseFloat(inc[1]);
 			thetamin = inc[1]*Math.PI/180;
 			thetamax = inc[0]*Math.PI/180;
 
-			this.data.plotThetaMax = this.data.simThetaMax.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamin),2))),this.data.dataH.t);
-			this.data.plotThetaMin = this.data.simThetaMin.scale(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamax),2))),this.data.dataH.t);
-
-			d = makePath(this.data.plotThetaMax.lineData,this.axes);
-			d += 'L'+makePath(this.data.plotThetaMin.lineData,this.axes,true).substr(1);
-			this.sim.attr('d',d);
+			this.graph.series[1].data[0].scaleLine(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamin),2))),this.graph.series[0].data[0].t);
+			this.graph.series[1].data[1].scaleLine(this.props.mass.value,this.props.dist.value*(0.5*(1 + Math.pow(Math.cos(thetamax),2))),this.graph.series[0].data[0].t);
+			this.graph.drawData();
 		}
 		return this;
 	};
@@ -536,122 +323,6 @@
 
 		return this;
 	};
-
-	function Axis(el,props,label){
-
-		var tick,translate,attrline,attrtext;
-		el.attr({'fill':'none','font-size':'10','font-family':'sans-serif','text-anchor':(props.dir=="left") ? 'end' : 'middle'});
-		
-		this.key = props.key||"";
-
-		var dp = 0;
-
-		this.path = svgEl('path').appendTo(el).addClass('domain').attr({'stroke':'#000'});
-
-		if(label){
-			this.label = label;
-			this.label.appendTo(el);
-		}
-		this.updateDP = function(){
-			dp = 0;
-			if(typeof props.ticks.spacing==="number"){
-				var str = ((props.ticks.spacing||"")+"");
-				// Count decimal places
-				if(str.match(".")) dp = str.split(".")[1].length;
-			}
-			return this;
-		}
-		this.setTickSpacing = function(s){
-			props.ticks.spacing = s;
-			return this.updateDP().updateTicks()
-		}
-		this.setProps = function(p){
-			if(typeof p==="object") props = p;
-			else props = {};
-			this.key = props.key||"";
-			return this.updateDP();
-			return this;
-		};
-		this.setScale = function(s){
-			this.scale = s;
-			return this.updateTicks();
-		};
-		this.setDomain = function(a,b){
-			this.scale.domain(a,b);
-			return this;
-		};
-		this.updateTicks = function(){
-			var t,v,p2,ticks,attr;
-			ticks = el._el.querySelectorAll('.tick');
-			for(t = 0; t < ticks.length; t++) ticks[t].parentNode.removeChild(ticks[t]);
-			for(v = this.scale.min ; v <= this.scale.max; v += props.ticks.spacing){
-				attr = {'opacity':1};
-				attrline = {'stroke':'#000'};
-				attrtext = {'fill':'#000'};
-				translate = "";
-				p2 = "";
-				if(props.dir=="left"){
-					attr.transform = 'translate(0,'+this.scale.value(v).toFixed(1)+')';
-					attrline.x2 = -props.ticks.length;
-					attrtext.x = -6;
-					attrtext.dy = "0.32em";
-				}else if(props.dir=="bottom"){
-					attr.transform = 'translate('+this.scale.value(v).toFixed(1)+',0)';
-					attrline.y2 = props.ticks.length;
-					attrtext.y = 8;
-					attrtext.dy = "0.71em";
-				}
-				tick = svgEl('g').appendTo(el).addClass('tick').attr(attr);
-				svgEl('line').appendTo(tick).attr(attrline);
-				svgEl('text').appendTo(tick).attr(attrtext).html(v.toFixed(dp));
-			}
-			return this;
-		};
-		this.updateSize = function(w,h){
-			if(!w) w = props.width;
-			if(!h) h = props.height;
-			this.path.attr({'d':(props.dir=="left") ? 'M'+w+','+h+'H0.5V0.5H'+w : 'M0.5,-'+h+'V0.5H'+w+'.5V-'+h});
-			if(this.scale) this.updateTicks();
-			return this;
-		};
-
-		this.setProps(props).updateSize();
-		
-		return this;
-	}
-
-	function makePath(data,axes,reverse){
-		var d = '';
-		var i;
-		if(axes.x.scale && axes.y.scale){
-			if(reverse){
-				for(i = data.length-1; i >= 0; i--) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);			
-			}else{
-				for(i = 0; i < data.length; i++) d += (i==0 ? 'M':'L')+axes.x.scale.value(data[i][axes.x.key]).toFixed(2)+','+axes.y.scale.value(data[i][axes.y.key]).toFixed(2);
-			}
-		}
-		return d;
-	}
-
-	function svgElement(t){
-		this._el = document.createElementNS('http://www.w3.org/2000/svg',t);
-		this.append = function(el){ this._el.appendChild(el); return this; };
-		this.appendTo = function(el){ if(el._el){ el._el.appendChild(this._el); }else{ el.appendChild(this._el); } return this; };
-		this.attr = function(obj,v){
-			var key;
-			// Build an object from a key/value pair
-			if(typeof obj==="string"){ key = obj; obj = {}; obj[key] = v; }
-			for(key in obj) this._el.setAttribute(key,obj[key]);
-			return this;
-		};
-		this.html = function(t){ this._el.textContent = t; return this; };
-		this.addClass = function(cls){ this._el.classList.add(...cls.split(" ")); return this; };
-		this.removeClass = function(){ this._el.classList.remove(...arguments); return this; };
-		this.data = function(d){ this._data = d; return this; };
-		return this;
-	}
-
-	function svgEl(t){ return new svgElement(t); }
 
 	function parseCSV(str) {
 		var lines = str.split(/\n/g);
